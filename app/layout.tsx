@@ -1,35 +1,37 @@
-import type { Metadata } from "next";
-import { Montserrat, Playfair_Display } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Cormorant_Garamond, Manrope } from "next/font/google";
 import "./globals.css";
 
-const playfair = Playfair_Display({
+const display = Cormorant_Garamond({
   subsets: ["latin"],
+  weight: ["400", "500", "600"],
   style: ["normal", "italic"],
-  variable: "--font-playfair",
+  variable: "--font-cormorant",
   display: "swap",
 });
 
-const montserrat = Montserrat({
+const ui = Manrope({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600"],
-  variable: "--font-montserrat",
+  variable: "--font-manrope",
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Bollicina · AI Sommelier",
-  description:
-    "A boutique AI Sommelier and sensory data experience for the Bollicina Maison.",
+  title: "Serena 1881 · Sommelier",
+  description: "A personal sommelier for every Serena guest, and live consumer intelligence for the winery.",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
+export const viewport: Viewport = {
+  themeColor: "#0a0b0e",
+  width: "device-width",
+  initialScale: 1,
+};
+
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${playfair.variable} ${montserrat.variable}`}>
-      <body className="min-h-screen bg-noir font-sans text-[#e8e6e1] antialiased">
-        {children}
-      </body>
+    <html lang="it" className={`${display.variable} ${ui.variable}`}>
+      <body className="min-h-dvh bg-night font-ui text-pearl antialiased">{children}</body>
     </html>
   );
 }

@@ -1,103 +1,90 @@
 "use client";
 
 import { useState } from "react";
-import { Lock, ServerCog, ShieldCheck } from "lucide-react";
-import ExecutiveDashboard from "@/components/ExecutiveDashboard";
-import VipExperience from "@/components/VipExperience";
-import type { SensoryProfile } from "@/components/data";
+import Bubbles from "@/components/serena/Bubbles";
+import LangToggle from "@/components/serena/LangToggle";
+import PhoneFrame from "@/components/serena/PhoneFrame";
+import QrPopover from "@/components/serena/QrPopover";
+import Dashboard from "@/components/serena/dashboard/Dashboard";
+import SommelierApp from "@/components/serena/phone/SommelierApp";
+import { t } from "@/lib/i18n";
+import type { Lang } from "@/lib/i18n";
+import { PERSONAS } from "@/lib/personas";
+import { useTastings } from "@/lib/useTastings";
+import { WINES } from "@/lib/wines";
 
-type View = "vip" | "executive";
-
-const TABS: { id: View; label: string; kicker: string }[] = [
-  { id: "vip", label: "VIP Client Experience", kicker: "Sommelier & 6s Test" },
-  { id: "executive", label: "Executive Intelligence", kicker: "The Owner's Hidden Gold" },
-];
-
-const TRUST = [
-  { Icon: ServerCog, text: "On-premise open-weights LLM" },
-  { Icon: ShieldCheck, text: "GDPR by design" },
-  { Icon: Lock, text: "Zero data egress" },
-];
-
-export default function Home() {
-  const [view, setView] = useState<View>("vip");
-  const [profiles, setProfiles] = useState<SensoryProfile[]>([]);
-
-  const addProfile = (p: Omit<SensoryProfile, "id">) =>
-    setProfiles((prev) => [...prev, { ...p, id: prev.length + 1 }]);
+export default function Stage() {
+  const [lang, setLang] = useState<Lang>("it");
+  const [personaId, setPersonaId] = useState(PERSONAS[0].id);
+  const { tastings, add } = useTastings();
+  const persona = PERSONAS.find((p) => p.id === personaId)!;
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <div className="border-b border-gold/15 bg-[#080808]">
-        <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-center gap-x-8 gap-y-1 px-4 py-2 text-[9px] uppercase tracking-[0.35em] text-ash sm:justify-end sm:px-8 lg:px-16">
-          {TRUST.map(({ Icon, text }) => (
-            <span key={text} className="flex items-center gap-2">
-              <Icon aria-hidden strokeWidth={1.4} className="size-3 text-gold" />
-              {text}
-            </span>
-          ))}
-        </div>
-      </div>
+    <div className="relative min-h-dvh overflow-x-clip">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-[700px]"
+        style={{ background: "radial-gradient(60% 100% at 50% 0%, rgba(232,214,168,.10), rgba(10,11,14,0) 70%)" }}
+      />
+      <Bubbles count={26} height={1200} className="opacity-60" />
 
-      <header className="z-20 lg:sticky lg:top-0 border-b border-gold/35 bg-noir/90 backdrop-blur">
-        <div className="mx-auto flex max-w-[1440px] flex-col gap-4 px-4 py-5 sm:px-8 lg:h-[96px] lg:flex-row lg:items-center lg:justify-between lg:px-16 lg:py-0">
-          <div className="flex items-baseline gap-4">
-            <span className="font-serif text-2xl tracking-[0.32em] text-gold sm:text-3xl">
-              BOLLICINA
-            </span>
-            <span className="hidden text-[10px] uppercase tracking-[0.4em] text-ash sm:inline">
-              powered by M.I.A.
-            </span>
-          </div>
-          <nav aria-label="Views" role="tablist" className="flex w-full border border-gold/50 lg:w-auto">
-            {TABS.map((tab) => {
-              const active = view === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  role="tab"
-                  aria-selected={active}
-                  onClick={() => {
-                    setView(tab.id);
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                  }}
-                  className={`flex min-h-12 flex-1 flex-col items-center justify-center gap-0.5 px-4 py-2 transition-colors duration-300 sm:px-7 lg:flex-none ${
-                    active ? "bg-gold text-noir" : "text-[#cfcac0] hover:text-gold-light"
-                  }`}
-                >
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.22em] sm:text-[11px] sm:tracking-[0.28em]">
-                    {tab.label}
-                  </span>
-                  <span
-                    className={`font-serif text-[11px] italic tracking-wide sm:text-xs ${
-                      active ? "text-noir/75" : "text-ash"
-                    }`}
-                  >
-                    {tab.kicker}
-                  </span>
-                </button>
-              );
-            })}
-          </nav>
+      <header className="relative z-20 mx-auto flex max-w-[1520px] items-center justify-between gap-4 px-4 py-5 sm:px-8">
+        <div className="flex items-baseline gap-3">
+          <span className="font-display text-[24px] tracking-[0.34em] text-champagne">SERENA</span>
+          <span className="text-[10px] tracking-[0.45em] text-smoke">1881</span>
+          <span className="hidden text-[10px] uppercase tracking-[0.4em] text-smoke md:inline">· Sommelier</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <QrPopover lang={lang} />
+          <LangToggle lang={lang} onChange={setLang} />
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-[1440px] flex-1">
-        {/* Both views stay mounted so chat history and the test survive tab switches. */}
-        <div hidden={view !== "vip"}>
-          <VipExperience onRegister={addProfile} />
-        </div>
-        <div hidden={view !== "executive"}>
-          <ExecutiveDashboard profiles={profiles} visible={view === "executive"} />
-        </div>
-      </main>
+      <section className="relative z-10 mx-auto max-w-[1520px] px-4 pt-6 sm:px-8">
+        <h1 className="font-display text-[44px] leading-[1.02] sm:text-[64px]">
+          <span className="champagne-text italic">{t("stageTitle", lang)}</span>
+        </h1>
+        <p className="mt-3 max-w-[620px] text-[15px] text-mist">{t("stageLead", lang)}</p>
 
-      <footer className="border-t border-gold/20">
-        <div className="mx-auto flex max-w-[1440px] flex-col gap-2 px-4 py-7 text-[10px] uppercase tracking-[0.35em] text-[#7d7a72] sm:flex-row sm:justify-between sm:px-8 lg:px-16">
-          <span>Built by Modelos Inteligencia Artificial S.L. · M.I.A.</span>
-          <span>Bollicina · Proof of Concept</span>
+        <div className="mt-8 flex flex-col gap-3">
+          <span className="text-[10px] uppercase tracking-[0.4em] text-smoke">{t("guests", lang)}</span>
+          <div className="no-scrollbar -mx-4 flex gap-4 overflow-x-auto px-4 pb-3 pt-1 sm:-mx-8 sm:px-8">
+            {PERSONAS.map((p) => {
+              const on = p.id === personaId;
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => setPersonaId(p.id)}
+                  aria-pressed={on}
+                  className="group flex w-[104px] shrink-0 flex-col items-center gap-2 text-center"
+                >
+                  <span
+                    data-on={on}
+                    className="orb flex size-[68px] items-center justify-center font-display text-[28px] italic"
+                    style={{ boxShadow: on ? `0 0 36px ${WINES[p.wine].accent}66, inset 0 0 26px rgba(232,214,168,.3)` : undefined }}
+                  >
+                    <span className={on ? "text-night" : "text-champagne"}>{p.name[0]}</span>
+                  </span>
+                  <span className={`text-[13px] ${on ? "text-pearl" : "text-mist"}`}>
+                    {p.name}, {p.age}
+                  </span>
+                  <span className="text-[10px] leading-tight text-smoke">{p.role[lang]}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </footer>
+      </section>
+
+      <main className="relative z-10 mx-auto grid max-w-[1520px] grid-cols-1 gap-10 px-4 pb-20 pt-6 sm:px-8 lg:grid-cols-[400px_1fr]">
+        <div className="flex flex-col items-center gap-4 lg:sticky lg:top-6 lg:self-start">
+          <PhoneFrame>
+            <SommelierApp key={persona.id} lang={lang} persona={persona} onTasting={add} />
+          </PhoneFrame>
+          <p className="max-w-[360px] text-center text-[11px] leading-relaxed text-smoke">{t("simulation", lang)}</p>
+        </div>
+        <Dashboard lang={lang} tastings={tastings} />
+      </main>
     </div>
   );
 }
