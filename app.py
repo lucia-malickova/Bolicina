@@ -1,12 +1,64 @@
 import streamlit as st
 
+# Nastavenie stránky
 st.set_page_config(
-    page_title="AI Sommelier | Live PoC",
+    page_title="M.I.A. | AI Sommelier & Ecosystem",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-# REÁLNA DATABÁZA PRODUKTOV (v taliančine pre maximálny šmrnc)
+# LUXUSNÝ VIZUÁLNY CSS DIZAJN (Štýl Zaha Hadid - temné tóny, smaragd, čisté línie)
+st.markdown(
+    """
+    <style>
+    /* Celkové pozadie a fonty */
+    .stApp {
+        background-color: #0f1110;
+        color: #f0f2f1;
+        font-family: 'Inter', sans-serif;
+    }
+    
+    /* Sidebar styling */
+    section[data-testid="stSidebar"] {
+        background-color: #161917;
+        border-right: 1px solid #262c29;
+    }
+    
+    /* Karty a boxy - organické zaoblenie */
+    div.stButton > button {
+        background: linear-gradient(135deg, #0d5c3f 0%, #104532 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 0.6rem 1.2rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    div.stButton > button:hover {
+        background: linear-gradient(135deg, #10704e 0%, #0d5c3f 100%);
+        box-shadow: 0 4px 12px rgba(13, 92, 63, 0.4);
+    }
+    
+    /* Metriky a dashboard boxy */
+    div[data-testid="metric-container"] {
+        background-color: #161917;
+        border: 1px solid #262c29;
+        padding: 15px;
+        border-radius: 10px;
+    }
+    
+    /* Nadpisy */
+    h1, h2, h3 {
+        color: #e2e8e4;
+        font-weight: 400;
+        letter-spacing: -0.5px;
+    }
+    </style>
+""",
+    unsafe_allow_html=True,
+)
+
+# REÁLNA DATABÁZA PRODUKTOV
 WINE_DATABASE = {
     "Valdobbiadene Prosecco Superiore DOCG Brut": {
         "profil": (
@@ -34,7 +86,7 @@ WINE_DATABASE = {
     },
 }
 
-st.sidebar.title("🍷 Ecosystem AI per Cantina")
+st.sidebar.title("🍷 M.I.A. Ecosystem")
 st.sidebar.markdown("---")
 app_mode = st.sidebar.radio(
     "Modalità:",
@@ -45,15 +97,15 @@ app_mode = st.sidebar.radio(
 )
 
 if app_mode == "Zona Clienti (Sommelier & Test 6s)":
-  st.title("🍇 Il tuo Sommelier Personale AI")
+  st.title("✦ Il tuo Sommelier Personale AI")
   st.markdown(
-      "*Esperienza interattiva per il cliente tramite QR code o in cantina.*"
+      "*Esperienza immersiva e on-premise per il cliente finale.*"
   )
 
   col1, col2 = st.columns([1, 1])
 
   with col1:
-    st.subheader("1. Selezione Bottiglia / Scansione")
+    st.subheader("1. Selezione & Scansione")
     selected_bottle = st.selectbox(
         "Prodotto selezionato dalla cantina:", list(WINE_DATABASE.keys())
     )
@@ -64,8 +116,8 @@ if app_mode == "Zona Clienti (Sommelier & Test 6s)":
     st.write(f"🍽️ **Abbinamento ideale:** {bottle_info['ideálne_k']}")
 
     st.markdown("---")
-    st.subheader("⭐ Test Sensoriale 6 Secondi (Punti fedeltà)")
-    st.write("Valuta il vino con un solo click (niente recensioni noiose):")
+    st.subheader("⭐ Test Sensoriale Rapido")
+    st.write("Valutazione strutturata in 6 secondi:")
 
     telo = st.radio(
         "Corpo del vino?", ["Leggero 🍃", "Medio ⚖️", "Pieno 🍇"], horizontal=True
@@ -79,22 +131,22 @@ if app_mode == "Zona Clienti (Sommelier & Test 6s)":
         horizontal=True,
     )
 
-    if st.button("Invia e guadagna 50 punti 🚀"):
+    if st.button("Invia feedback e colleziona punti 🚀"):
       st.success(
-          "🎉 Registrato! Il cliente ha guadagnato 50 punti e tu hai dati"
-          " preziosi."
+          "✨ Dati acquisiti con successo. Il profilo sensoriale è stato registrato"
+          " nel sistema locale."
       )
 
   with col2:
-    st.subheader("2. Chat dal vivo con l'AI Sommelier")
-    st.write("Chiedi al sommelier (es. 'Si abbina al pesce?'):")
+    st.subheader("2. AI Sommelier (Live Chat)")
+    st.write("Interazione contestuale con l'identità della cantina:")
 
     if "messages" not in st.session_state:
       st.session_state.messages = [{
           "role": "assistant",
           "content": (
-              f"Buongiorno! Ottima scelta il **{selected_bottle}**. Come posso"
-              " aiutarvi oggi?"
+              f"Benvenuti. Eccellente scelta il **{selected_bottle}**. Come"
+              " posso assistervi oggi?"
           ),
       }]
 
@@ -102,15 +154,15 @@ if app_mode == "Zona Clienti (Sommelier & Test 6s)":
       with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-    if prompt := st.chat_input("Scrivi una domanda al sommelier..."):
+    if prompt := st.chat_input("Scrivi una richiesta..."):
       st.session_state.messages.append({"role": "user", "content": prompt})
       with st.chat_message("user"):
         st.markdown(prompt)
 
       ai_response = (
-          f"Riguardo alla tua domanda su **{selected_bottle}**: Consigliamo di"
-          f" servire a una temperatura di {bottle_info['teplota']}. Si"
-          f" abbina perfettamente a {bottle_info['ideálne_k']}."
+          f"In merito al vostro interesse per **{selected_bottle}**: Si"
+          f" consiglia il servizio a {bottle_info['teplota']}. Armonizza"
+          f" perfettamente con {bottle_info['ideálne_k']}."
       )
 
       st.session_state.messages.append(
@@ -120,27 +172,27 @@ if app_mode == "Zona Clienti (Sommelier & Test 6s)":
         st.markdown(ai_response)
 
 else:
-  st.title("📊 Dashboard Manageriale (Dati nascosti per la cantina)")
+  st.title("✦ Dashboard Manageriale (Analytics On-Premise)")
   st.markdown(
-      "Qui il produttore vede i dati immediati dai test di 6 secondi –"
-      " feedback sensoriale reale in tempo reale."
+      "Monitoraggio in tempo reale dei dati di consumo e dei profili"
+      " sensoriali raccolti."
   )
 
   col1, col2, col3 = st.columns(3)
-  col1.metric("Profili sensoriali raccolti", "1.428", "Test rapidi 6s")
-  col2.metric("Freschezza percepita media", "91%", "Alta corrispondenza")
-  col3.metric("Prodotto più richiesto", "Valdobbiadene DOCG", "58% delle richieste")
+  col1.metric("Profili sensoriali", "1.428", "+14% questa settimana")
+  col2.metric("Indice di gradimento", "91%", "Alta stabilità")
+  col3.metric("Prodotto di punta", "Valdobbiadene DOCG", "58% del volume")
 
   st.markdown("---")
-  st.subheader("📈 Mappa Sensoriale del Mercato (Dati diretti dai consumatori)")
+  st.subheader("📈 Mappa Sensoriale Dinamica")
   st.write(
-      "Dati precisi su come il mercato percepisce i vostri lotti di prosecco:"
+      "Aggregazione sicura dei dati di mercato direttamente dai consumatori:"
   )
 
   chart_data = {"Fruttata 🍏": 54, "Floreale 🌸": 30, "Minerale 🪨": 16}
   st.bar_chart(chart_data)
 
   st.success(
-      "🔒 **Tutti i dati sono archiviati localmente in cantina, pienamente"
-      " conformi al GDPR e senza terze parti.**"
+      "🔒 **Infrastruttura on-premise isolata. Piena conformità GDPR e controllo"
+      " totale dei dati aziendali.**"
   )
