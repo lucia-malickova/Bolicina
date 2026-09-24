@@ -10,7 +10,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { SENSORY_MAPPING } from "./data";
 
 interface TipProps {
   active?: boolean;
@@ -28,12 +27,16 @@ function GoldTooltip({ active, payload }: TipProps) {
   );
 }
 
-export default function SensoryChart() {
+export default function SensoryChart({
+  data,
+}: {
+  data: { note: string; share: number }[];
+}) {
   return (
     <div className="h-[340px] w-full sm:h-[380px]">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
-          data={SENSORY_MAPPING}
+          data={data}
           margin={{ top: 36, right: 8, bottom: 8, left: -12 }}
           barCategoryGap="28%"
         >
