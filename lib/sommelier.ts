@@ -10,11 +10,16 @@ export interface Recommendation {
 }
 
 // Stand-in for the fine-tuned model: keyword routing over IT/EN free text.
+// Checked on the raw text: here a negation is the wish itself ("senza alcol", "non troppo dolce").
+const NO_ALCOHOL = /guid|driv|incint|pregnan|analcol|alcohol.?free|(no|senza|without|zero).?alcol|non bevo|don'?t drink|sober/i;
+const NOT_SWEET = /\b(non|no|not|niente|nothing|senza|without|poco|less)\b[^.,;!?]{0,25}(dolc|sweet|zuccher|sugar)/i;
+// Everything else: drop the few words after a negation so "non sono stanca" doesn't read as "stanca".
+const NEGATED = /\b(non|no|not|senza|without|niente|nothing|never|mai|don'?t)\b[^.,;!?]{0,25}/gi;
+
 const RULES: { re: RegExp; wine: WineId; also?: WineId }[] = [
-  { re: /guid|driv|incint|pregnan|analcol|alcohol.?free|no.?alcol|non bevo|don'?t drink|sober/i, wine: "zero" },
   { re: /vegan|biolog|organic|\bbio\b/i, wine: "bio" },
   { re: /calori|zuccher|sugar|sport|palestr|gym|dieta|diet|allen|train/i, wine: "audace", also: "zero" },
-  { re: /festa|party|amici|friends|compleanno|birthday/i, wine: "ice", also: "zero" },
+  { re: /festa|festegg|celebrat|party|amici|friends|compleanno|birthday/i, wine: "ice", also: "zero" },
   { re: /dessert|dolce|sweet|torta|cake|pasticc/i, wine: "ice" },
   { re: /romant|anniversar|stupir|surprise|impress/i, wine: "audace", also: "ice" },
   { re: /pesce|fish|crud|seafood|ostric|oyster|sushi|asia|\bmare\b|\bsea\b/i, wine: "audace" },
@@ -45,7 +50,12 @@ export function recommend(
   if (persona && text.trim() === persona.message.it.trim()) return persona;
   if (persona && text.trim() === persona.message.en.trim()) return persona;
 
-  const rule = RULES.find((r) => r.re.test(text));
+  const positive = text.replace(NEGATED, " ");
+  const rule = NO_ALCOHOL.test(text)
+    ? { wine: "zero" as WineId, also: undefined }
+    : NOT_SWEET.test(text)
+      ? { wine: "audace" as WineId, also: undefined }
+      : RULES.find((r) => r.re.test(positive));
   let wine: WineId = rule?.wine ?? (mood ? MOOD_WINE[mood] : "medea");
   let also = rule?.also;
   if (!rule && moment === "dinner" && company === "couple") {

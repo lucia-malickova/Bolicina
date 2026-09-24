@@ -28,3 +28,8 @@ export async function POST(req: Request) {
   }
   return NextResponse.json({ ok: true });
 }
+
+export function DELETE() {
+  list().length = 0;
+  return NextResponse.json({ ok: true });
+}

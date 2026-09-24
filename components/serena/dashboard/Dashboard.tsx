@@ -11,7 +11,7 @@ import OutlookChart from "./OutlookChart";
 import PerceptionChart from "./PerceptionChart";
 import SegmentBubbles from "./SegmentBubbles";
 
-export default function Dashboard({ lang, tastings }: { lang: Lang; tastings: Tasting[] }) {
+export default function Dashboard({ lang, tastings, onReset }: { lang: Lang; tastings: Tasting[]; onReset: () => void }) {
   const rows = useMemo(() => [...BASELINE, ...tastings.map(toRow)], [tastings]);
   const perc = useMemo(() => perception(rows), [rows]);
   const segs = useMemo(() => segments(rows), [rows]);
@@ -32,6 +32,14 @@ export default function Dashboard({ lang, tastings }: { lang: Lang; tastings: Ta
             {t("live", lang)}
           </span>
           <span className="text-[10px] uppercase tracking-[0.2em] text-smoke">{t("illustrative", lang)}</span>
+          {tastings.length > 0 && (
+            <button
+              onClick={() => window.confirm(t("resetConfirm", lang)) && onReset()}
+              className="text-[10px] uppercase tracking-[0.2em] text-smoke underline decoration-champagne/30 underline-offset-4 hover:text-champagne"
+            >
+              {t("reset", lang)}
+            </button>
+          )}
         </div>
       </header>
 

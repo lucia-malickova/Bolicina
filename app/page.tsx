@@ -16,7 +16,7 @@ import { WINES } from "@/lib/wines";
 export default function Stage() {
   const [lang, setLang] = useState<Lang>("it");
   const [personaId, setPersonaId] = useState(PERSONAS[0].id);
-  const { tastings, add } = useTastings();
+  const { tastings, add, reset } = useTastings();
   const persona = PERSONAS.find((p) => p.id === personaId)!;
 
   return (
@@ -83,7 +83,7 @@ export default function Stage() {
           </PhoneFrame>
           <p className="max-w-[360px] text-center text-[11px] leading-relaxed text-smoke">{t("simulation", lang)}</p>
         </div>
-        <Dashboard lang={lang} tastings={tastings} />
+        <Dashboard lang={lang} tastings={tastings} onReset={reset} />
       </main>
     </div>
   );

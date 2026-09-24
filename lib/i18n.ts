@@ -126,6 +126,8 @@ export const UI = {
     en: "Finish a tasting on the phone: it will appear here.",
   },
   guest: { it: "Ospite", en: "Guest" },
+  reset: { it: "Azzera sessione", en: "Reset session" },
+  resetConfirm: { it: "Cancellare le degustazioni di questa sessione?", en: "Delete this session's tastings?" },
 } satisfies Record<string, L10n>;
 
 export type UIKey = keyof typeof UI;

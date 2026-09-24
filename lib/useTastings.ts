@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Tasting } from "./tasting";
 
 function merge(a: Tasting[], b: Tasting[]) {
@@ -12,15 +12,19 @@ function merge(a: Tasting[], b: Tasting[]) {
 /** Local tastings appear instantly; tastings from other phones arrive by polling. */
 export function useTastings(poll = true) {
   const [tastings, setTastings] = useState<Tasting[]>([]);
+  // Bumped on reset so a poll that started before the reset can't bring old tastings back.
+  const generation = useRef(0);
 
   useEffect(() => {
     if (!poll) return;
     let alive = true;
-    const load = () =>
+    const load = () => {
+      const gen = generation.current;
       fetch("/api/tastings", { cache: "no-store" })
         .then((r) => (r.ok ? r.json() : []))
-        .then((remote: Tasting[]) => alive && setTastings((prev) => merge(prev, remote)))
+        .then((remote: Tasting[]) => alive && gen === generation.current && setTastings((prev) => merge(prev, remote)))
         .catch(() => {});
+    };
     load();
     const id = setInterval(load, 2500);
     return () => {
@@ -38,5 +42,13 @@ export function useTastings(poll = true) {
     }).catch(() => {});
   }, []);
 
-  return { tastings, add };
+  const reset = useCallback(() => {
+    generation.current += 1;
+    setTastings([]);
+    fetch("/api/tastings", { method: "DELETE" })
+      .catch(() => {})
+      .finally(() => (generation.current += 1));
+  }, []);
+
+  return { tastings, add, reset };
 }
