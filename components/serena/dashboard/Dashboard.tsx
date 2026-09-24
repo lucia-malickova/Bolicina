@@ -6,6 +6,9 @@ import type { Lang } from "@/lib/i18n";
 import { BASELINE, MONTHS, againShare, outlook, perception, segments, toRow, zeroShare } from "@/lib/insights";
 import type { Tasting } from "@/lib/tasting";
 import { int } from "@/lib/wines";
+import { actions, dataValue } from "@/lib/actions";
+import ActionsPanel from "./ActionsPanel";
+import DataValueCard from "./DataValueCard";
 import LiveFeed from "./LiveFeed";
 import OutlookChart from "./OutlookChart";
 import PerceptionChart from "./PerceptionChart";
@@ -16,6 +19,8 @@ export default function Dashboard({ lang, tastings, onReset }: { lang: Lang; tas
   const perc = useMemo(() => perception(rows), [rows]);
   const segs = useMemo(() => segments(rows), [rows]);
   const out = useMemo(() => outlook(rows), [rows]);
+  const todo = useMemo(() => actions(rows, perc, out), [rows, perc, out]);
+  const value = useMemo(() => dataValue(rows), [rows]);
   const nf = (n: number) => int(n, lang);
 
   return (
@@ -54,6 +59,8 @@ export default function Dashboard({ lang, tastings, onReset }: { lang: Lang; tas
         <Kpi label={t("kZero", lang)} value={`${Math.round(zeroShare(rows, MONTHS - 1) * 100)}%`} caption={t("kZeroCap", lang)} />
       </div>
 
+      <ActionsPanel items={todo} lang={lang} />
+
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.6fr_1fr]">
         <Card title={t("gapTitle", lang)} lead={t("gapLead", lang)}>
           <PerceptionChart data={perc} lang={lang} />
@@ -72,6 +79,8 @@ export default function Dashboard({ lang, tastings, onReset }: { lang: Lang; tas
           <p className="mt-4 font-display text-[20px] italic text-champagne">{t("outInsight", lang)}</p>
         </Card>
       </div>
+
+      <DataValueCard v={value} lang={lang} />
     </section>
   );
 }

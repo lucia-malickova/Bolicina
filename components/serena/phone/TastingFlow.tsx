@@ -16,9 +16,21 @@ export interface TastingResult {
   seconds: number;
 }
 
+export type AutoAnswers = Omit<TastingResult, "seconds">;
+
 const SWEET_LABELS: UIKey[] = ["dry", "dry", "balanced", "sweet", "sweet"];
 
-export default function TastingFlow({ lang, wine, onDone }: { lang: Lang; wine: WineId; onDone: (r: TastingResult) => void }) {
+export default function TastingFlow({
+  lang,
+  wine,
+  onDone,
+  auto,
+}: {
+  lang: Lang;
+  wine: WineId;
+  onDone: (r: TastingResult) => void;
+  auto?: AutoAnswers;
+}) {
   const start = useRef(Date.now());
   const [elapsed, setElapsed] = useState(0);
   const [step, setStep] = useState(0);
@@ -31,6 +43,28 @@ export default function TastingFlow({ lang, wine, onDone }: { lang: Lang; wine: 
     const id = setInterval(() => setElapsed((Date.now() - start.current) / 1000), 100);
     return () => clearInterval(id);
   }, []);
+
+  // Autoplay: glide the sweetness bubble to its answer, then tap the other orbs one by one.
+  useEffect(() => {
+    if (!auto) return;
+    if (step === 0) {
+      const done = sweet === auto.sweet;
+      const id = setTimeout(
+        () => (done ? setStep(1) : setSweet((v) => v + Math.sign(auto.sweet - v) * 0.5)),
+        done ? 800 : 320,
+      );
+      return () => clearTimeout(id);
+    }
+    const pickers = [
+      null,
+      () => choose(auto.bubbles, () => (setBubbles(auto.bubbles), setStep(2))),
+      () => choose(auto.aroma, () => (setAroma(auto.aroma), setStep(3))),
+      () => choose(auto.again, () => onDone({ ...auto, seconds: Math.round((Date.now() - start.current) / 100) / 10 })),
+    ];
+    const id = setTimeout(() => pickers[step]?.(), 1100);
+    return () => clearTimeout(id);
+    // choose/onDone are stable enough for a one-shot timer per step.
+  }, [auto, step, sweet]);
 
   // Let the chosen orb pop before moving on.
   const choose = (key: string, then: () => void) => {

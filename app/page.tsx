@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Play, Square } from "lucide-react";
 import Bubbles from "@/components/serena/Bubbles";
 import LangToggle from "@/components/serena/LangToggle";
 import PhoneFrame from "@/components/serena/PhoneFrame";
@@ -18,6 +19,18 @@ export default function Stage() {
   const [personaId, setPersonaId] = useState(PERSONAS[0].id);
   const { tastings, add, reset } = useTastings();
   const persona = PERSONAS.find((p) => p.id === personaId)!;
+  const [auto, setAuto] = useState(false);
+  const [run, setRun] = useState(0);
+
+  const startAuto = () => {
+    setRun((r) => r + 1);
+    setAuto(true);
+  };
+  const nextAuto = () => {
+    const i = PERSONAS.findIndex((p) => p.id === personaId);
+    if (i === PERSONAS.length - 1) return setAuto(false);
+    setPersonaId(PERSONAS[i + 1].id);
+  };
 
   return (
     <div className="relative min-h-dvh overflow-x-clip">
@@ -47,14 +60,27 @@ export default function Stage() {
         <p className="mt-3 max-w-[620px] text-[15px] text-mist">{t("stageLead", lang)}</p>
 
         <div className="mt-8 flex flex-col gap-3">
-          <span className="text-[10px] uppercase tracking-[0.4em] text-smoke">{t("guests", lang)}</span>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span className="text-[10px] uppercase tracking-[0.4em] text-smoke">{t("guests", lang)}</span>
+            <button
+              onClick={() => (auto ? setAuto(false) : startAuto())}
+              aria-pressed={auto}
+              className={`${auto ? "btn" : "btn-ghost"} flex items-center gap-2 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.2em]`}
+            >
+              {auto ? <Square strokeWidth={0} className="size-3 fill-current" /> : <Play strokeWidth={0} className="size-3 fill-current" />}
+              {auto ? t("stop", lang) : t("autoplay", lang)}
+            </button>
+          </div>
           <div className="no-scrollbar -mx-4 flex gap-4 overflow-x-auto px-4 pb-3 pt-1 sm:-mx-8 sm:px-8">
             {PERSONAS.map((p) => {
               const on = p.id === personaId;
               return (
                 <button
                   key={p.id}
-                  onClick={() => setPersonaId(p.id)}
+                  onClick={() => {
+                    setAuto(false);
+                    setPersonaId(p.id);
+                  }}
                   aria-pressed={on}
                   className="group flex w-[104px] shrink-0 flex-col items-center gap-2 text-center"
                 >
@@ -79,7 +105,14 @@ export default function Stage() {
       <main className="relative z-10 mx-auto grid max-w-[1520px] grid-cols-1 gap-10 px-4 pb-20 pt-6 sm:px-8 lg:grid-cols-[400px_1fr]">
         <div className="flex flex-col items-center gap-4 lg:sticky lg:top-6 lg:self-start">
           <PhoneFrame>
-            <SommelierApp key={persona.id} lang={lang} persona={persona} onTasting={add} />
+            <SommelierApp
+              key={`${persona.id}-${run}`}
+              lang={lang}
+              persona={persona}
+              onTasting={add}
+              auto={auto}
+              onAutoDone={nextAuto}
+            />
           </PhoneFrame>
           <p className="max-w-[360px] text-center text-[11px] leading-relaxed text-smoke">{t("simulation", lang)}</p>
         </div>

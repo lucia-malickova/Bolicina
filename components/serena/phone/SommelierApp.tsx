@@ -9,12 +9,12 @@ import type { Company, Moment, Mood, Persona, Segment } from "@/lib/personas";
 import { fitFor, recommend } from "@/lib/sommelier";
 import type { Recommendation } from "@/lib/sommelier";
 import type { Tasting } from "@/lib/tasting";
-import { WINES, WINE_IDS } from "@/lib/wines";
+import { WINES, WINE_IDS, realSweetness } from "@/lib/wines";
 import type { WineId } from "@/lib/wines";
 import Bubbles from "../Bubbles";
 import WineVisual from "../WineVisual";
 import TastingFlow from "./TastingFlow";
-import type { TastingResult } from "./TastingFlow";
+import type { AutoAnswers, TastingResult } from "./TastingFlow";
 import Reward from "./Reward";
 import WineCard from "./WineCard";
 
@@ -42,11 +42,15 @@ export default function SommelierApp({
   persona,
   onTasting,
   framed = true,
+  auto = false,
+  onAutoDone,
 }: {
   lang: Lang;
   persona: Persona | null;
   onTasting: (t: Tasting) => void;
   framed?: boolean;
+  auto?: boolean;
+  onAutoDone?: () => void;
 }) {
   const [guestSegment, setGuestSegment] = useState<Segment | null>(null);
   const [screen, setScreen] = useState<Screen>(persona ? "home" : "age");
@@ -57,6 +61,21 @@ export default function SommelierApp({
   const [result, setResult] = useState<TastingResult | null>(null);
   const [done, setDone] = useState(0);
   const [lastSweet, setLastSweet] = useState<number | null>(null);
+  const autoDone = useRef(onAutoDone);
+  autoDone.current = onAutoDone;
+
+  // Autoplay only advances the screens that have no button of their own to press.
+  useEffect(() => {
+    if (!auto || !persona) return;
+    if (screen === "home") {
+      const id = setTimeout(() => setScreen("ask"), 1400);
+      return () => clearTimeout(id);
+    }
+    if (screen === "reward") {
+      const id = setTimeout(() => autoDone.current?.(), 3400);
+      return () => clearTimeout(id);
+    }
+  }, [auto, persona, screen]);
 
   useEffect(() => {
     if (persona) return;
@@ -153,6 +172,7 @@ export default function SommelierApp({
         {screen === "ask" && (
           <Ask
             key={persona?.id ?? "guest"}
+            auto={auto}
             lang={lang}
             persona={persona}
             onSend={(text, ctx) => {
@@ -168,6 +188,7 @@ export default function SommelierApp({
 
         {screen === "reco" && reco && (
           <Conversation
+            auto={auto}
             lang={lang}
             asked={asked}
             reco={reco}
@@ -202,7 +223,15 @@ export default function SommelierApp({
           </div>
         )}
 
-        {screen === "taste" && <TastingFlow key={wine} lang={lang} wine={wine} onDone={finishTasting} />}
+        {screen === "taste" && (
+          <TastingFlow
+            key={wine}
+            lang={lang}
+            wine={wine}
+            onDone={finishTasting}
+            auto={auto && persona ? autoAnswers(persona, wine) : undefined}
+          />
+        )}
 
         {screen === "reward" && result && (
           <Reward
@@ -318,11 +347,24 @@ function ChipRow<K extends string>({
   );
 }
 
+function autoAnswers(p: Persona, wine: WineId): AutoAnswers {
+  const young = p.segment === "18-24" || p.segment === "25-34";
+  const softer = young && (wine === "medea" || wine === "frizzante" || wine === "chardonnay") ? 0.5 : 0;
+  return {
+    sweet: Math.min(5, Math.max(1, Math.round((realSweetness(WINES[wine]) + softer) * 2) / 2)),
+    bubbles: wine === "frizzante" ? "delicate" : p.moment === "party" ? "explosive" : "lively",
+    aroma: WINES[wine].aromas[0],
+    again: p.id === "sofia" ? "maybe" : "yes",
+  };
+}
+
 function Ask({
   lang,
   persona,
   onSend,
+  auto,
 }: {
+  auto: boolean;
   lang: Lang;
   persona: Persona | null;
   onSend: (text: string, ctx: { mood?: Mood; company?: Company; moment?: Moment }) => void;
@@ -332,9 +374,18 @@ function Ask({
   const [moment, setMoment] = useState<Moment | undefined>(persona?.moment);
   const [edited, setEdited] = useState<string | null>(null);
   const typed = useTypewriter(persona?.message[lang] ?? "", 55, !!persona && edited === null);
+  const send = useRef(onSend);
+  send.current = onSend;
   const text = edited ?? typed.shown;
   const full = edited ?? persona?.message[lang] ?? "";
   const canSend = full.trim().length > 0 || !!mood || !!moment;
+
+  useEffect(() => {
+    if (!auto || !typed.done || edited !== null) return;
+    const id = setTimeout(() => send.current(full, { mood, company, moment }), 900);
+    return () => clearTimeout(id);
+    // Fire once, when the persona's message has finished typing.
+  }, [auto, typed.done]);
 
   return (
     <div className="enter flex min-h-[calc(100%-64px)] flex-col pb-5">
@@ -372,7 +423,9 @@ function Conversation({
   asked,
   reco,
   onTaste,
+  auto,
 }: {
+  auto: boolean;
   lang: Lang;
   asked: string;
   reco: Recommendation;
@@ -381,6 +434,14 @@ function Conversation({
   const [thinking, setThinking] = useState(true);
   const reply = useTypewriter(reco.reply[lang], 90, !thinking);
   const endRef = useRef<HTMLDivElement>(null);
+  const taste = useRef(onTaste);
+  taste.current = onTaste;
+
+  useEffect(() => {
+    if (!auto || thinking || !reply.done) return;
+    const id = setTimeout(() => taste.current(reco.wine), 2200);
+    return () => clearTimeout(id);
+  }, [auto, thinking, reply.done, reco.wine]);
 
   useEffect(() => {
     const id = setTimeout(() => setThinking(false), 1500);
