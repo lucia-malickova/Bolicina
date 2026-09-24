@@ -43,7 +43,8 @@ Fonts: Cormorant Garamond (display) and Manrope (UI) via `next/font`.
    - *Avvisi*: owner notifications from month-over-month changes (ranked by significance);
    - *Il vino che vi manca*: searches wine specs for the biggest gap in the range, and
      loads it into the virtual tasting;
-   - *Dove si assaggia Serena*: live map of Italy and neighbours, new tastings pulse.
+   - *Dove si assaggia Serena nel mondo*: live world map over Prosecco's main markets
+     (Italy shown as one bubble with its top cities on hover); new tastings pulse.
 
 ## Honest scope
 
@@ -97,7 +98,7 @@ No environment variables.
 - `lib/simulate.ts` virtual tasting, data questions, tomorrow's forecast
 - `lib/useTastings.ts` live sync, offline queue, on-phone memory
 - `lib/useDictation.ts` voice input; `lib/shareCard.ts` shareable profile image
-- `lib/alerts.ts` owner notifications; `lib/geo.ts` + `lib/mapShapes.ts` the live map
+- `lib/alerts.ts` owner notifications; `lib/geo.ts` + `lib/worldShapes.ts` the live map
   (outlines generated from Natural Earth via world-atlas, public domain)
 - `lib/tasting.ts` tasting type, payload validation, taste profiles
 - `lib/insights.ts` illustrative baseline and dashboard aggregations

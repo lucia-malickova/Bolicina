@@ -137,7 +137,7 @@ export const PERSONAS: Persona[] = [
       en: "Serena 0.0, Alessandra. You toast with your client, the bubbles are fine and lasting, and at three o'clock you are perfectly sharp. It was made for business lunches.",
     },
     usualSweet: 2.5,
-    city: "milano",
+    city: "london",
   },
   {
     id: "chiara",
@@ -222,7 +222,7 @@ export const PERSONAS: Persona[] = [
       en: "It depends on what you count, Francesca. If it's sugar: Audace, 0.8 g per glass, the driest in the range. If it's calories: Serena 0.0, about 23 kcal against 80–90 for a sparkling wine. Careful though: the 0.0 has more sugar.",
     },
     usualSweet: 1.3,
-    city: "torino",
+    city: "sydney",
   },
   {
     id: "anna",
@@ -265,7 +265,7 @@ export const PERSONAS: Persona[] = [
       en: "Open with Audace, Paolo: a Prosecco aged under the sea, a story to tell her at the table. With dessert, Serena ICE: sweet and fresh, peach and apricot. Two glasses, two moments.",
     },
     usualSweet: 2,
-    city: "verona",
+    city: "newyork",
   },
   {
     id: "davide",

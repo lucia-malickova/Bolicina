@@ -10,6 +10,7 @@ import Dashboard from "@/components/serena/dashboard/Dashboard";
 import SommelierApp from "@/components/serena/phone/SommelierApp";
 import { t } from "@/lib/i18n";
 import type { Lang } from "@/lib/i18n";
+import { CITY_NAMES } from "@/lib/geo";
 import { PERSONAS } from "@/lib/personas";
 import { useTastings } from "@/lib/useTastings";
 import { WINES } from "@/lib/wines";
@@ -95,6 +96,7 @@ export default function Stage() {
                     {p.name}, {p.age}
                   </span>
                   <span className="text-[10px] leading-tight text-smoke">{p.role[lang]}</span>
+                  <span className="text-[9px] uppercase tracking-[0.2em] text-champagne/70">{CITY_NAMES[p.city]}</span>
                 </button>
               );
             })}

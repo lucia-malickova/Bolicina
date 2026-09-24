@@ -1,10 +1,10 @@
 import type { Row } from "./insights";
-import { CITY_XY } from "./mapShapes";
 import type { Tasting } from "./tasting";
 import { WINE_IDS } from "./wines";
 import type { WineId } from "./wines";
+import { WORLD_XY } from "./worldShapes";
 
-export type City = keyof typeof CITY_XY;
+export type City = Exclude<keyof typeof WORLD_XY, "italia">;
 
 export const CITY_NAMES: Record<City, string> = {
   conegliano: "Conegliano",
@@ -29,15 +29,50 @@ export const CITY_NAMES: Record<City, string> = {
   ljubljana: "Ljubljana",
   innsbruck: "Innsbruck",
   nice: "Nice",
+  london: "London",
+  paris: "Paris",
+  berlin: "Berlin",
+  amsterdam: "Amsterdam",
+  brussels: "Bruxelles",
+  stockholm: "Stockholm",
+  copenhagen: "København",
+  oslo: "Oslo",
+  warszawa: "Warszawa",
+  praha: "Praha",
+  bratislava: "Bratislava",
+  newyork: "New York",
+  miami: "Miami",
+  losangeles: "Los Angeles",
+  chicago: "Chicago",
+  toronto: "Toronto",
+  saopaulo: "São Paulo",
+  mexico: "Ciudad de México",
+  tokyo: "Tokyo",
+  shanghai: "Shanghai",
+  hongkong: "Hong Kong",
+  singapore: "Singapore",
+  sydney: "Sydney",
+  melbourne: "Melbourne",
+  dubai: "Dubai",
+  capetown: "Cape Town",
 };
 
-export const isCity = (x: unknown): x is City => typeof x === "string" && Object.hasOwn(CITY_XY, x);
+export const ITALIAN = new Set<City>([
+  "conegliano", "treviso", "venezia", "padova", "verona", "trieste", "milano", "torino",
+  "genova", "bologna", "firenze", "roma", "napoli", "bari", "palermo", "cagliari",
+]);
 
-// Illustrative spread of the baseline tastings, heaviest around the winery and in big cities.
+export const isCity = (x: unknown): x is City => typeof x === "string" && x !== "italia" && Object.hasOwn(WORLD_XY, x);
+
+// Illustrative spread of the baseline tastings: about a third in Italy, the rest in the
+// export markets where Prosecco sells most (UK, US, Germany first).
 const WEIGHTS: Record<City, number> = {
-  conegliano: 6, treviso: 10, venezia: 9, padova: 8, verona: 7, trieste: 4, milano: 14, torino: 6, genova: 3,
-  bologna: 6, firenze: 5, roma: 10, napoli: 4, bari: 2, palermo: 2, cagliari: 1.5, munchen: 6, wien: 4,
-  zurich: 4, ljubljana: 1.5, innsbruck: 2, nice: 2,
+  conegliano: 3, treviso: 5, venezia: 4.5, padova: 4, verona: 3.5, trieste: 2, milano: 7, torino: 3, genova: 1.5,
+  bologna: 3, firenze: 2.5, roma: 5, napoli: 2, bari: 1, palermo: 1, cagliari: 0.8,
+  munchen: 5, wien: 3, zurich: 3, ljubljana: 1, innsbruck: 1, nice: 1.5,
+  london: 12, paris: 4, berlin: 6, amsterdam: 4, brussels: 3, stockholm: 3, copenhagen: 2, oslo: 2, warszawa: 2,
+  praha: 2, bratislava: 1.5, newyork: 9, miami: 3, losangeles: 4, chicago: 3, toronto: 3, saopaulo: 2, mexico: 1.5,
+  tokyo: 3, shanghai: 2, hongkong: 2, singapore: 2, sydney: 4, melbourne: 2, dubai: 3, capetown: 1.5,
 };
 const CITIES = Object.keys(WEIGHTS) as City[];
 const TOTAL = CITIES.reduce((s, c) => s + WEIGHTS[c], 0);
@@ -55,27 +90,24 @@ function cityForIndex(i: number): City {
 export interface CityStat {
   city: City;
   n: number;
-  top: WineId;
+  wines: Map<WineId, number>;
   lastLive?: number;
 }
 
 export function cityStats(baseline: Row[], live: Tasting[]): CityStat[] {
-  const counts = new Map<City, Map<WineId, number>>();
-  const bump = (c: City, w: WineId) => {
-    const m = counts.get(c) ?? new Map<WineId, number>();
-    m.set(w, (m.get(w) ?? 0) + 1);
-    counts.set(c, m);
+  const stats = new Map<City, CityStat>();
+  const bump = (city: City, w: WineId, at?: number) => {
+    const s = stats.get(city) ?? { city, n: 0, wines: new Map<WineId, number>() };
+    s.n += 1;
+    s.wines.set(w, (s.wines.get(w) ?? 0) + 1);
+    if (at !== undefined) s.lastLive = Math.max(s.lastLive ?? 0, at);
+    stats.set(city, s);
   };
   baseline.forEach((r, i) => bump(cityForIndex(i), r.wine));
-  const lastLive = new Map<City, number>();
-  live.forEach((t) => {
-    const c = t.city ?? "conegliano";
-    bump(c, t.wine);
-    lastLive.set(c, Math.max(lastLive.get(c) ?? 0, t.at));
-  });
-  return [...counts.entries()].map(([city, m]) => {
-    const n = [...m.values()].reduce((s, v) => s + v, 0);
-    const top = WINE_IDS.reduce((a, b) => ((m.get(b) ?? 0) > (m.get(a) ?? 0) ? b : a));
-    return { city, n, top, lastLive: lastLive.get(city) };
-  });
+  live.forEach((t) => bump(t.city ?? "conegliano", t.wine, t.at));
+  return [...stats.values()];
+}
+
+export function topWine(wines: Map<WineId, number>): WineId {
+  return WINE_IDS.reduce((a, b) => ((wines.get(b) ?? 0) > (wines.get(a) ?? 0) ? b : a));
 }

@@ -233,11 +233,14 @@ export const UI = {
   mwTo: { it: "al", en: "to" },
   mwTry: { it: "Provalo nell'assaggio virtuale", en: "Try it in the virtual tasting" },
   mwNone: { it: "La vostra gamma copre già bene tutte le fasce.", en: "Your range already covers every group well." },
-  geoTitle: { it: "Dove si assaggia Serena", en: "Where Serena is tasted" },
-  geoLead: { it: "Ogni bolla è una città. Le nuove degustazioni si accendono in diretta.", en: "Every bubble is a city. New tastings light up live." },
+  geoTitle: { it: "Dove si assaggia Serena nel mondo", en: "Where Serena is tasted worldwide" },
+  geoLead: {
+    it: "Ogni bolla è una città, l'Italia è una sola bolla. Le nuove degustazioni si accendono in diretta.",
+    en: "Every bubble is a city, Italy is one bubble. New tastings light up live.",
+  },
   geoNote: {
-    it: "Città illustrative per i dati di base; nella versione reale solo con il consenso alla posizione.",
-    en: "Illustrative cities for the baseline; in production only with location consent.",
+    it: "Distribuzione illustrativa sui principali mercati del Prosecco; nella versione reale solo con il consenso alla posizione.",
+    en: "Illustrative spread over Prosecco's main markets; in production only with location consent.",
   },
   report: { it: "Report per il CdA", en: "Board report" },
   reportTitle: { it: "Report per il Consiglio", en: "Report for the Board" },

@@ -122,12 +122,11 @@ export default function Dashboard({ lang, tastings, onReset }: { lang: Lang; tas
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <Card title={t("geoTitle", lang)} lead={t("geoLead", lang)}>
-          <LiveMap stats={cities} lang={lang} now={now} />
-        </Card>
-        <Tomorrow rows={rows} lang={lang} />
-      </div>
+      <Card title={t("geoTitle", lang)} lead={t("geoLead", lang)}>
+        <LiveMap stats={cities} lang={lang} now={now} />
+      </Card>
+
+      <Tomorrow rows={rows} lang={lang} />
 
       <DataValueCard v={value} lang={lang} />
     </section>
