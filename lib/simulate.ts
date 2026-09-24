@@ -151,3 +151,45 @@ export function tomorrow(rows: Row[], weather: Weather, day: Day) {
     .sort((a, b) => b.change - a.change);
   return { volume: volume - 1, wines };
 }
+
+/* ---------- The wine you're missing ---------- */
+
+export interface Missing {
+  spec: NewWine;
+  segment: Segment;
+  from: number;
+  to: number;
+}
+
+const specOf = (id: WineId): NewWine => ({
+  sugar: (WINES[id].sugar[0] + WINES[id].sugar[1]) / 2,
+  abv: WINES[id].abv,
+  aroma: WINES[id].aromas[0],
+  bubbles: id === "frizzante" ? "delicate" : "lively",
+});
+
+/** Searches simple wine specs for the one that most improves on the range for some age group. */
+export function missingWine(rows: Row[]): Missing | null {
+  const size = Object.fromEntries(SEGMENTS.map((s) => [s, rows.filter((r) => r.segment === s).length])) as Record<Segment, number>;
+  const best = Object.fromEntries(SEGMENTS.map((s) => [s, 0])) as Record<Segment, number>;
+  for (const id of WINE_IDS) {
+    for (const x of virtualPanel(rows, specOf(id)).bySegment) best[x.segment] = Math.max(best[x.segment], x.appeal);
+  }
+  let top: (Missing & { score: number }) | null = null;
+  for (const sugar of [5, 9, 13, 16, 22, 30, 40]) {
+    for (const abv of [0, 9, 11]) {
+      for (const aroma of Object.keys(AROMAS) as Aroma[]) {
+        const spec: NewWine = { sugar, abv, aroma, bubbles: "lively" };
+        const res = virtualPanel(rows, spec);
+        if (res.overlap) continue;
+        for (const x of res.bySegment) {
+          const score = (x.appeal - best[x.segment]) * size[x.segment];
+          if (x.appeal > best[x.segment] && (!top || score > top.score)) {
+            top = { spec, segment: x.segment, from: best[x.segment], to: x.appeal, score };
+          }
+        }
+      }
+    }
+  }
+  return top && { spec: top.spec, segment: top.segment, from: top.from, to: top.to };
+}

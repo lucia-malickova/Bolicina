@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowUp, ChevronLeft, Mic, ScanLine, Sparkles } from "lucide-react";
+import { ArrowUp, ChevronLeft, Compass, Gift as GiftIcon, Mic, ScanLine, Sparkles } from "lucide-react";
 import { t } from "@/lib/i18n";
 import type { Lang } from "@/lib/i18n";
 import { COMPANY, MOMENTS, MOODS, SEGMENTS } from "@/lib/personas";
@@ -18,10 +18,13 @@ import Bubbles from "../Bubbles";
 import WineVisual from "../WineVisual";
 import TastingFlow from "./TastingFlow";
 import type { AutoAnswers, TastingResult } from "./TastingFlow";
+import Gift from "./Gift";
 import Reward from "./Reward";
+import TasteMap from "./TasteMap";
+import type { TastePoint } from "./TasteMap";
 import WineCard from "./WineCard";
 
-type Screen = "age" | "home" | "ask" | "reco" | "scan" | "scanned" | "taste" | "reward";
+type Screen = "age" | "home" | "ask" | "reco" | "scan" | "scanned" | "taste" | "reward" | "map" | "gift";
 
 const AGE_KEY = "serena.segment";
 
@@ -48,6 +51,7 @@ export default function SommelierApp({
   auto = false,
   onAutoDone,
   history = [],
+  gift,
 }: {
   lang: Lang;
   persona: Persona | null;
@@ -56,6 +60,7 @@ export default function SommelierApp({
   auto?: boolean;
   onAutoDone?: () => void;
   history?: Tasting[];
+  gift?: { wine: WineId; from: string };
 }) {
   const [guestSegment, setGuestSegment] = useState<Segment | null>(null);
   const [screen, setScreen] = useState<Screen>(persona ? "home" : "age");
@@ -97,6 +102,22 @@ export default function SommelierApp({
   const usualSweet = persona?.usualSweet ?? lastSweet;
   const last = history[history.length - 1];
   const before = [...history].reverse().find((h) => h.wine === wine);
+  const [giftBack, setGiftBack] = useState<Screen>("home");
+  const openGift = (id: WineId) => {
+    setWine(id);
+    setGiftBack(screen);
+    setScreen("gift");
+  };
+  const tastePoints: TastePoint[] = [
+    // A persona arrives with a short past, so the map already tells a story.
+    ...(persona
+      ? [0.8, 0.45, 0.15].map((o, i) => ({
+          sweet: Math.min(5, Math.max(1, Math.round((persona.usualSweet + o) * 2) / 2)),
+          aroma: WINES[persona.wine].aromas[i % 2 ? 0 : WINES[persona.wine].aromas.length - 1],
+        }))
+      : []),
+    ...history.map((h) => ({ sweet: h.sweet, aroma: h.aroma })),
+  ];
 
   const chooseAge = (s: Segment) => {
     setGuestSegment(s);
@@ -121,6 +142,7 @@ export default function SommelierApp({
       mood: context.mood ?? persona?.mood,
       company: context.company ?? persona?.company,
       moment: context.moment ?? persona?.moment,
+      city: persona?.city ?? "conegliano",
       seconds: r.seconds,
     });
     setLastSweet(r.sweet);
@@ -132,6 +154,7 @@ export default function SommelierApp({
   const back = () => {
     if (screen === "taste") setScreen(reco ? "reco" : "scanned");
     else if (screen === "scanned") setScreen("scan");
+    else if (screen === "gift") setScreen(giftBack);
     else setScreen("home");
   };
 
@@ -169,6 +192,14 @@ export default function SommelierApp({
             lang={lang}
             name={name}
             last={last}
+            gift={gift}
+            onGiftOpen={() => {
+              if (!gift) return;
+              setReco(null);
+              setWine(gift.wine);
+              setScreen("scanned");
+            }}
+            onMap={() => setScreen("map")}
             onAsk={() => setScreen("ask")}
             onScan={() => {
               setReco(null);
@@ -200,6 +231,7 @@ export default function SommelierApp({
             lang={lang}
             asked={asked}
             reco={reco}
+            onGift={openGift}
             onTaste={(id) => {
               setWine(id);
               setScreen("taste");
@@ -232,9 +264,14 @@ export default function SommelierApp({
                   : undefined
               }
               onTaste={() => setScreen("taste")}
+              onGift={() => openGift(wine)}
             />
           </div>
         )}
+
+        {screen === "map" && <TasteMap lang={lang} points={tastePoints} />}
+
+        {screen === "gift" && <Gift lang={lang} wine={wine} from={name} onDone={() => setScreen(giftBack)} />}
 
         {screen === "taste" && (
           <TastingFlow
@@ -277,6 +314,7 @@ function AgeScreen({ lang, onPick }: { lang: Lang; onPick: (s: Segment) => void 
     <div className="enter flex min-h-full flex-col items-center px-7 pb-12 pt-10">
       <Wordmark />
       <h1 className="mt-14 text-center font-display text-[34px] italic leading-tight text-pearl">{t("ageQ", lang)}</h1>
+      <p className="mt-3 text-[11px] uppercase tracking-[0.3em] text-champagne">{t("adultsOnly", lang)}</p>
       <div className="mt-12 flex flex-wrap justify-center gap-4">
         {SEGMENTS.map((s, i) => (
           <button
@@ -297,19 +335,34 @@ function Home({
   lang,
   name,
   last,
+  gift,
+  onGiftOpen,
+  onMap,
   onAsk,
   onScan,
 }: {
   lang: Lang;
   name: string;
   last?: Tasting;
+  gift?: { wine: WineId; from: string };
+  onGiftOpen: () => void;
+  onMap: () => void;
   onAsk: () => void;
   onScan: () => void;
 }) {
   return (
     <div className="enter flex min-h-full flex-col items-center px-7 pb-10 pt-8">
       <Wordmark />
-      <p className="mt-12 text-center text-[11px] uppercase tracking-[0.42em] text-smoke">
+      {gift && (
+        <button onClick={onGiftOpen} className="glass enter mt-6 flex w-full items-center gap-3 rounded-[22px] p-3 text-left">
+          <GiftIcon strokeWidth={1.3} className="size-6 shrink-0 text-champagne" />
+          <span className="flex-1 text-[12px] leading-snug text-pearl">
+            <b className="font-semibold">{gift.from}</b> {t("giftFrom", lang)} <span className="text-champagne">{WINES[gift.wine].name}</span>
+          </span>
+          <span className="text-[10px] uppercase tracking-[0.2em] text-champagne">{t("giftOpen", lang)} →</span>
+        </button>
+      )}
+      <p className={`${gift ? "mt-6" : "mt-12"} text-center text-[11px] uppercase tracking-[0.42em] text-smoke`}>
         {last ? t("welcomeBack", lang) : t("hello", lang)}, {name}
       </p>
       <h1 className="mt-3 text-center font-display text-[44px] italic leading-[1.02] text-pearl">{t("homeLead", lang)}</h1>
@@ -339,10 +392,18 @@ function Home({
             {t("scanBottle", lang)}
           </span>
         </button>
-        <span aria-hidden className="orb absolute bottom-24 left-6 size-9 opacity-60" />
-        <span aria-hidden className="orb absolute bottom-6 left-24 size-5 opacity-40" />
+        <button
+          onClick={onMap}
+          className="orb float absolute bottom-0 left-2 flex size-[104px] flex-col items-center justify-center gap-1.5 text-pearl"
+          style={{ animationDelay: "-1.2s" }}
+        >
+          <Compass strokeWidth={1.1} className="size-5 text-champagne" />
+          <span className="max-w-[80px] text-center text-[10px] font-medium uppercase leading-snug tracking-[0.14em]">{t("myTaste", lang)}</span>
+        </button>
+        <span aria-hidden className="orb absolute bottom-32 left-10 size-5 opacity-40" />
       </div>
-      <p className="mt-auto text-[10px] uppercase tracking-[0.4em] text-smoke">{t("brandTag", lang)}</p>
+      <p className="mt-auto text-center text-[10px] uppercase tracking-[0.4em] text-smoke">{t("brandTag", lang)}</p>
+      <p className="mt-2 text-center text-[9px] uppercase tracking-[0.3em] text-smoke/70">18+ · {t("drinkResponsibly", lang)}</p>
     </div>
   );
 }
@@ -471,9 +532,11 @@ function Conversation({
   asked,
   reco,
   onTaste,
+  onGift,
   auto,
 }: {
   auto: boolean;
+  onGift: (id: WineId) => void;
   lang: Lang;
   asked: string;
   reco: Recommendation;
@@ -519,7 +582,7 @@ function Conversation({
       </div>
       {reply.done && !thinking && (
         <>
-          <WineCard id={reco.wine} lang={lang} onTaste={() => onTaste(reco.wine)} />
+          <WineCard id={reco.wine} lang={lang} onTaste={() => onTaste(reco.wine)} onGift={() => onGift(reco.wine)} />
           {reco.also && (
             <button onClick={() => onTaste(reco.also!)} className="glass enter flex items-center gap-4 rounded-[24px] p-4 text-left">
               <WineVisual id={reco.also} size={96} />

@@ -251,3 +251,12 @@ export function int(n: number, lang: "it" | "en") {
     .toString()
     .replace(/\B(?=(\d{3})+(?!\d))/g, lang === "it" ? "." : ",");
 }
+
+/** EU sparkling-wine sweetness category for a residual sugar level. */
+export function dosage(gramsPerLitre: number) {
+  if (gramsPerLitre <= 6) return "Extra Brut";
+  if (gramsPerLitre <= 12) return "Brut";
+  if (gramsPerLitre <= 17) return "Extra Dry";
+  if (gramsPerLitre <= 32) return "Dry";
+  return "Demi-Sec";
+}

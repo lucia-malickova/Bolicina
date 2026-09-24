@@ -1,4 +1,5 @@
 import type { L10n } from "./i18n";
+import type { City } from "./geo";
 import type { WineId } from "./wines";
 
 export type Segment = "18-24" | "25-34" | "35-49" | "50-64" | "65+";
@@ -49,6 +50,7 @@ export interface Persona {
   reply: L10n;
   /** Usual sweetness preference on the 1–5 tasting scale. */
   usualSweet: number;
+  city: City;
 }
 
 export const PERSONAS: Persona[] = [
@@ -71,6 +73,7 @@ export const PERSONAS: Persona[] = [
       en: "Then nothing demanding, Giulia. Our Prosecco Frizzante: gentle bubbles, only 10.5% alcohol and a fresh, fruity nose. Serve it at 7–9 °C, one glass, and the evening slows down on its own.",
     },
     usualSweet: 3,
+    city: "treviso",
   },
   {
     id: "marco",
@@ -91,6 +94,7 @@ export const PERSONAS: Persona[] = [
       en: "Audace, Marco. Only 6,492 bottles, aged over four months 20 metres deep in the Gulf of Trieste, in total darkness. Extra Brut, saline, mineral: every sip tells of the Karst. If you have raw seafood, this is its moment.",
     },
     usualSweet: 1.5,
+    city: "trieste",
   },
   {
     id: "luca",
@@ -112,6 +116,7 @@ export const PERSONAS: Persona[] = [
       en: "Two bottles, no compromise. Serena ICE for the toasts: fresh, peach and apricot, everyone likes it. And Serena 0.0 for those who don't drink or are driving: same bubbles, zero alcohol. Nobody is left with an empty glass.",
     },
     usualSweet: 4,
+    city: "milano",
   },
   {
     id: "alessandra",
@@ -132,6 +137,7 @@ export const PERSONAS: Persona[] = [
       en: "Serena 0.0, Alessandra. You toast with your client, the bubbles are fine and lasting, and at three o'clock you are perfectly sharp. It was made for business lunches.",
     },
     usualSweet: 2.5,
+    city: "milano",
   },
   {
     id: "chiara",
@@ -152,6 +158,7 @@ export const PERSONAS: Persona[] = [
       en: "Medea Extra Dry, Chiara. White flowers and golden apple, soft and lively. It stands up to the nibbles and the long chat: the second glass arrives before you notice.",
     },
     usualSweet: 3,
+    city: "bologna",
   },
   {
     id: "giorgio",
@@ -172,6 +179,7 @@ export const PERSONAS: Persona[] = [
       en: "Your Friday deserves the hills, Giorgio: Valdobbiadene DOCG Brut. Rose and jasmine, green apple, saline and elegant. Serve it at 5–7 °C. The classic that never lets you down.",
     },
     usualSweet: 2,
+    city: "venezia",
   },
   {
     id: "sofia",
@@ -192,6 +200,7 @@ export const PERSONAS: Persona[] = [
       en: "Then Soe, Sofia. Ribolla Gialla and Chardonnay, vintage: golden apple, banana and a touch of wisteria and iris. It isn't a Prosecco, and that is exactly the point.",
     },
     usualSweet: 2,
+    city: "roma",
   },
   {
     id: "francesca",
@@ -213,6 +222,7 @@ export const PERSONAS: Persona[] = [
       en: "It depends on what you count, Francesca. If it's sugar: Audace, 0.8 g per glass, the driest in the range. If it's calories: Serena 0.0, about 23 kcal against 80–90 for a sparkling wine. Careful though: the 0.0 has more sugar.",
     },
     usualSweet: 1.3,
+    city: "torino",
   },
   {
     id: "anna",
@@ -233,6 +243,7 @@ export const PERSONAS: Persona[] = [
       en: "Prosecco Biologico Brut, Anna: organically farmed and certified vegan friendly. Acacia blossom and yellow apple, fresh and harmonious. Perfect with grilled vegetables.",
     },
     usualSweet: 2,
+    city: "firenze",
   },
   {
     id: "paolo",
@@ -254,6 +265,7 @@ export const PERSONAS: Persona[] = [
       en: "Open with Audace, Paolo: a Prosecco aged under the sea, a story to tell her at the table. With dessert, Serena ICE: sweet and fresh, peach and apricot. Two glasses, two moments.",
     },
     usualSweet: 2,
+    city: "verona",
   },
   {
     id: "davide",
@@ -274,5 +286,6 @@ export const PERSONAS: Persona[] = [
       en: "You toast with everyone, Davide: Serena 0.0. Zero alcohol, fine bubbles, a delicate, fruity bouquet. The glass is full for the driver too.",
     },
     usualSweet: 3,
+    city: "padova",
   },
 ];

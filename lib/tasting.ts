@@ -1,3 +1,5 @@
+import { isCity } from "./geo";
+import type { City } from "./geo";
 import type { L10n } from "./i18n";
 import { COMPANY, MOMENTS, MOODS, SEGMENTS } from "./personas";
 import type { Company, Moment, Mood, Segment } from "./personas";
@@ -20,6 +22,7 @@ export interface Tasting {
   mood?: Mood;
   company?: Company;
   moment?: Moment;
+  city?: City;
   seconds: number;
 }
 
@@ -42,6 +45,7 @@ export function parseTasting(x: unknown): Tasting | null {
   if (o.mood !== undefined && !has(MOODS, o.mood)) return null;
   if (o.company !== undefined && !has(COMPANY, o.company)) return null;
   if (o.moment !== undefined && !has(MOMENTS, o.moment)) return null;
+  if (o.city !== undefined && !isCity(o.city)) return null;
   return {
     id: o.id,
     at: o.at as number,
@@ -55,6 +59,7 @@ export function parseTasting(x: unknown): Tasting | null {
     mood: o.mood as Mood | undefined,
     company: o.company as Company | undefined,
     moment: o.moment as Moment | undefined,
+    city: o.city as City | undefined,
     seconds: o.seconds as number,
   };
 }

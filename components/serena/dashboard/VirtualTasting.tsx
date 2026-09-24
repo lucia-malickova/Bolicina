@@ -7,7 +7,7 @@ import type { Row } from "@/lib/insights";
 import { virtualPanel } from "@/lib/simulate";
 import type { NewWine } from "@/lib/simulate";
 import type { Bubbles } from "@/lib/tasting";
-import { AROMAS, WINES, fmt, kcalFor } from "@/lib/wines";
+import { AROMAS, WINES, dosage, fmt, kcalFor } from "@/lib/wines";
 import type { Aroma } from "@/lib/wines";
 import WineVisual from "../WineVisual";
 
@@ -18,21 +18,13 @@ const BUBBLES: [Bubbles, "bDelicate" | "bLively" | "bExplosive"][] = [
   ["explosive", "bExplosive"],
 ];
 
-function dosage(g: number) {
-  if (g <= 6) return "Extra Brut";
-  if (g <= 12) return "Brut";
-  if (g <= 17) return "Extra Dry";
-  if (g <= 32) return "Dry";
-  return "Demi-Sec";
-}
-
-export default function VirtualTasting({ rows, lang }: { rows: Row[]; lang: Lang }) {
-  const [w, setW] = useState<NewWine>({ sugar: 8, abv: 9, aroma: "yellowFruit", bubbles: "lively" });
+export default function VirtualTasting({ rows, lang, initial }: { rows: Row[]; lang: Lang; initial?: NewWine }) {
+  const [w, setW] = useState<NewWine>(initial ?? { sugar: 8, abv: 9, aroma: "yellowFruit", bubbles: "lively" });
   const res = useMemo(() => virtualPanel(rows, w), [rows, w]);
   const set = (patch: Partial<NewWine>) => setW((prev) => ({ ...prev, ...patch }));
 
   return (
-    <article className="flex flex-col gap-6 rounded-[26px] bg-deep p-6 hairline sm:p-7">
+    <article id="virtual-tasting" className="flex scroll-mt-6 flex-col gap-6 rounded-[26px] bg-deep p-6 hairline sm:p-7">
       <div className="flex flex-col gap-1.5">
         <h3 className="font-display text-[28px] leading-tight">{t("vtTitle", lang)}</h3>
         <p className="max-w-[560px] text-[13px] leading-relaxed text-mist">{t("vtLead", lang)}</p>

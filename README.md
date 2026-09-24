@@ -11,6 +11,7 @@ Fonts: Cormorant Garamond (display) and Manrope (UI) via `next/font`.
 - `/` presenter stage: pick one of 11 guests, use the phone, watch the dashboard update.
 - `/app` the guest app alone, full screen, for a real phone (the QR button on `/` points here).
   Installable (PWA) and works offline: see "Offline" below.
+- `/report` one-page board report of the live dashboard; "Salva come PDF" prints it.
 - `/api/tastings` in-memory store that lets tastings from phones reach the stage.
 
 ## What the demo shows
@@ -25,6 +26,10 @@ Fonts: Cormorant Garamond (display) and Manrope (UI) via `next/font`.
    and a scanned bottle they already tasted shows what they felt last time. The profile
    can be shared as an Instagram-sized image.
 5. **Voice.** A microphone button dictates the question instead of typing it.
+   **Taste map:** a compass (dry ↔ sweet, mineral ↔ fruity) where every tasting moves
+   the guest's point and leaves a trail. **Gift a glass:** the guest sends a wine with a
+   message; the link (`/app?dono=…&da=…`) opens with a welcome banner for that wine.
+   18+ and "drink responsibly" notices are shown in the app.
 6. **Autoplay.** "Demo automatica" runs all 11 guests while the presenter talks; tapping
    any guest stops it and hands control back.
 7. **Winery intelligence.** Tastings recorded, repurchase intent, Serena 0.0 among
@@ -34,7 +39,11 @@ Fonts: Cormorant Garamond (display) and Manrope (UI) via `next/font`.
      and see estimated appeal per age group and the closest wine already in the range;
    - *Chiedi ai tuoi dati*: prepared questions answered in one sentence;
    - *Domani*: weather and weekday/weekend change the expected tastings per wine;
-   - *Il valore dei vostri dati*: the first-party data asset the winery is building.
+   - *Il valore dei vostri dati*: the first-party data asset the winery is building;
+   - *Avvisi*: owner notifications from month-over-month changes (ranked by significance);
+   - *Il vino che vi manca*: searches wine specs for the biggest gap in the range, and
+     loads it into the virtual tasting;
+   - *Dove si assaggia Serena*: live map of Italy and neighbours, new tastings pulse.
 
 ## Honest scope
 
@@ -46,7 +55,9 @@ Fonts: Cormorant Garamond (display) and Manrope (UI) via `next/font`.
 - Dashboard numbers are an illustrative baseline (`lib/insights.ts`, fixed seed) plus
   every tasting made in the session. The forecast is a linear trend, labelled as such.
 - Virtual tasting, tomorrow's forecast and data answers are simple, explainable estimates
-  over the same data (`lib/simulate.ts`); weather coefficients are examples.
+  over the same data (`lib/simulate.ts`); weather coefficients are examples. The baseline
+  seeds one story on purpose (Medea losing 25–34 year-olds in the last quarter) so the
+  alerts have something real to find. Baseline cities are illustrative.
 - Voice uses the browser's own speech recogniser (Chrome, Safari). Chrome sends the audio
   to Google to transcribe, so it is neither offline nor on-premise; production would use
   a speech model on the winery's server or on the phone.
@@ -86,6 +97,8 @@ No environment variables.
 - `lib/simulate.ts` virtual tasting, data questions, tomorrow's forecast
 - `lib/useTastings.ts` live sync, offline queue, on-phone memory
 - `lib/useDictation.ts` voice input; `lib/shareCard.ts` shareable profile image
+- `lib/alerts.ts` owner notifications; `lib/geo.ts` + `lib/mapShapes.ts` the live map
+  (outlines generated from Natural Earth via world-atlas, public domain)
 - `lib/tasting.ts` tasting type, payload validation, taste profiles
 - `lib/insights.ts` illustrative baseline and dashboard aggregations
 - `lib/i18n.ts` all interface text in Italian and English

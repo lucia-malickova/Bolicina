@@ -33,7 +33,7 @@ export default function Tomorrow({ rows, lang }: { rows: Row[]; lang: Lang }) {
         <p className="max-w-[640px] text-[13px] leading-relaxed text-mist">{t("tmLead", lang)}</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[260px_1fr]">
+      <div className="@container"><div className="grid grid-cols-1 gap-8 @2xl:grid-cols-[260px_1fr]">
         <div className="flex flex-col gap-5">
           <div className="flex gap-3">
             {WEATHER.map(([k, label, Icon]) => (
@@ -84,6 +84,7 @@ export default function Tomorrow({ rows, lang }: { rows: Row[]; lang: Lang }) {
             ))}
           </p>
         </div>
+      </div>
       </div>
       <p className="text-[11px] text-smoke">{t("tmNote", lang)}</p>
     </article>

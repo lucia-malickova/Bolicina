@@ -1,12 +1,20 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { FileText } from "lucide-react";
 import { t } from "@/lib/i18n";
 import type { Lang } from "@/lib/i18n";
 import { BASELINE, MONTHS, againShare, outlook, perception, segments, toRow, zeroShare } from "@/lib/insights";
 import type { Tasting } from "@/lib/tasting";
 import { int } from "@/lib/wines";
 import { actions, dataValue } from "@/lib/actions";
+import { alerts } from "@/lib/alerts";
+import { cityStats } from "@/lib/geo";
+import LiveMap from "./LiveMap";
+import { missingWine } from "@/lib/simulate";
+import type { NewWine } from "@/lib/simulate";
+import AlertsPanel from "./AlertsPanel";
+import MissingWine from "./MissingWine";
 import ActionsPanel from "./ActionsPanel";
 import AskData from "./AskData";
 import Tomorrow from "./Tomorrow";
@@ -24,6 +32,15 @@ export default function Dashboard({ lang, tastings, onReset }: { lang: Lang; tas
   const out = useMemo(() => outlook(rows), [rows]);
   const todo = useMemo(() => actions(rows, perc, out), [rows, perc, out]);
   const value = useMemo(() => dataValue(rows), [rows]);
+  const news = useMemo(() => alerts(rows, tastings), [rows, tastings]);
+  const gap = useMemo(() => missingWine(rows), [rows]);
+  const cities = useMemo(() => cityStats(BASELINE, tastings), [tastings]);
+  const now = tastings.length ? Date.now() : 0;
+  const [vt, setVt] = useState<{ spec: NewWine; n: number } | null>(null);
+  const tryInVirtual = (spec: NewWine) => {
+    setVt((prev) => ({ spec, n: (prev?.n ?? 0) + 1 }));
+    requestAnimationFrame(() => document.getElementById("virtual-tasting")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  };
   const nf = (n: number) => int(n, lang);
 
   return (
@@ -40,6 +57,15 @@ export default function Dashboard({ lang, tastings, onReset }: { lang: Lang; tas
             {t("live", lang)}
           </span>
           <span className="text-[10px] uppercase tracking-[0.2em] text-smoke">{t("illustrative", lang)}</span>
+          <a
+            href={`/report?lang=${lang}`}
+            target="_blank"
+            rel="noopener"
+            className="btn-ghost flex items-center gap-2 px-3.5 py-1.5 text-[10px] uppercase tracking-[0.2em]"
+          >
+            <FileText strokeWidth={1.5} className="size-3.5" />
+            {t("report", lang)}
+          </a>
           {tastings.length > 0 && (
             <button
               onClick={() => window.confirm(t("resetConfirm", lang)) && onReset()}
@@ -68,14 +94,22 @@ export default function Dashboard({ lang, tastings, onReset }: { lang: Lang; tas
         <Card title={t("gapTitle", lang)} lead={t("gapLead", lang)}>
           <PerceptionChart data={perc} lang={lang} />
         </Card>
-        <Card title={t("feedTitle", lang)}>
-          <LiveFeed tastings={tastings} lang={lang} />
-        </Card>
+        <div className="flex flex-col gap-4">
+          <Card title={t("alertsTitle", lang)} lead={t("alertsLead", lang)}>
+            <AlertsPanel items={news} lang={lang} />
+          </Card>
+          <Card title={t("feedTitle", lang)}>
+            <LiveFeed tastings={tastings} lang={lang} />
+          </Card>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.5fr_1fr]">
-        <VirtualTasting rows={rows} lang={lang} />
-        <AskData rows={rows} lang={lang} />
+        <VirtualTasting key={vt?.n ?? 0} rows={rows} lang={lang} initial={vt?.spec} />
+        <div className="flex flex-col gap-4">
+          <MissingWine m={gap} lang={lang} onTry={tryInVirtual} />
+          <AskData rows={rows} lang={lang} />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
@@ -88,7 +122,12 @@ export default function Dashboard({ lang, tastings, onReset }: { lang: Lang; tas
         </Card>
       </div>
 
-      <Tomorrow rows={rows} lang={lang} />
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <Card title={t("geoTitle", lang)} lead={t("geoLead", lang)}>
+          <LiveMap stats={cities} lang={lang} now={now} />
+        </Card>
+        <Tomorrow rows={rows} lang={lang} />
+      </div>
 
       <DataValueCard v={value} lang={lang} />
     </section>

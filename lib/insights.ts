@@ -113,7 +113,9 @@ function buildBaseline(): Row[] {
         wine === "frizzante"
           ? pick(rand, { delicate: 70, lively: 25, explosive: 5 })
           : pick(rand, { delicate: 25, lively: 55, explosive: segment === "18-24" ? 35 : 20 });
-      const yes = AGAIN_YES[wine] + (segment === "18-24" && (wine === "ice" || wine === "zero") ? 0.12 : 0);
+      // Illustrative story for the alerts: Medea is losing 25–34 year-olds over the last quarter.
+      const slipping = wine === "medea" && segment === "25-34" && month >= MONTHS - 3 ? 0.3 : 0;
+      const yes = AGAIN_YES[wine] + (segment === "18-24" && (wine === "ice" || wine === "zero") ? 0.12 : 0) - slipping;
       const r = rand();
       const again: Again = r < yes ? "yes" : r < yes + 0.22 ? "maybe" : "no";
       rows.push({ month, segment, wine, sweet, bubbles, aroma, again });

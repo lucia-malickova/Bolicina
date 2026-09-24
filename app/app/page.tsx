@@ -7,16 +7,22 @@ import SommelierApp from "@/components/serena/phone/SommelierApp";
 import { t } from "@/lib/i18n";
 import type { Lang } from "@/lib/i18n";
 import { useTastings } from "@/lib/useTastings";
+import { WINES } from "@/lib/wines";
+import type { WineId } from "@/lib/wines";
 
 export default function GuestApp() {
   const [lang, setLang] = useState<Lang>("it");
   const [online, setOnline] = useState(true);
+  const [gift, setGift] = useState<{ wine: WineId; from: string } | undefined>();
   const { tastings, add, pending } = useTastings(false, "bollicine.mine");
 
   useEffect(() => {
     if (process.env.NODE_ENV === "production" && "serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js").catch(() => {});
     }
+    const q = new URLSearchParams(window.location.search);
+    const dono = q.get("dono");
+    if (dono && Object.hasOwn(WINES, dono)) setGift({ wine: dono as WineId, from: (q.get("da") || "").slice(0, 30) || "Bollicine" });
     const sync = () => setOnline(navigator.onLine);
     sync();
     window.addEventListener("online", sync);
@@ -40,7 +46,7 @@ export default function GuestApp() {
         )}
         <LangToggle lang={lang} onChange={setLang} />
       </div>
-      <SommelierApp lang={lang} persona={null} onTasting={add} framed={false} history={tastings} />
+      <SommelierApp lang={lang} persona={null} onTasting={add} framed={false} history={tastings} gift={gift} />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Gift } from "lucide-react";
 import { t } from "@/lib/i18n";
 import type { Lang } from "@/lib/i18n";
 import type { Fit } from "@/lib/sommelier";
@@ -16,12 +17,14 @@ export default function WineCard({
   fit,
   memory,
   onTaste,
+  onGift,
 }: {
   id: WineId;
   lang: Lang;
   fit?: Fit;
   memory?: string;
   onTaste: () => void;
+  onGift?: () => void;
 }) {
   const w = WINES[id];
   const [ordered, setOrdered] = useState(false);
@@ -63,9 +66,14 @@ export default function WineCard({
         <button onClick={onTaste} className="btn flex-1 py-3.5 text-[13px] font-semibold uppercase tracking-[0.18em]">
           {t("tasteNow", lang)}
         </button>
-        <button onClick={() => setOrdered(true)} className="btn-ghost px-6 py-3.5 text-[13px] uppercase tracking-[0.18em]">
+        <button onClick={() => setOrdered(true)} className="btn-ghost px-5 py-3.5 text-[13px] uppercase tracking-[0.18em]">
           {t("order", lang)}
         </button>
+        {onGift && (
+          <button onClick={onGift} aria-label={t("gift", lang)} className="btn-ghost flex size-[50px] shrink-0 items-center justify-center">
+            <Gift strokeWidth={1.4} className="size-5" />
+          </button>
+        )}
       </div>
       {ordered && <p className="enter relative mt-3 text-center text-[11px] text-champagne">{t("orderSoon", lang)}</p>}
     </article>
