@@ -8,6 +8,9 @@ import type { Tasting } from "@/lib/tasting";
 import { int } from "@/lib/wines";
 import { actions, dataValue } from "@/lib/actions";
 import ActionsPanel from "./ActionsPanel";
+import AskData from "./AskData";
+import Tomorrow from "./Tomorrow";
+import VirtualTasting from "./VirtualTasting";
 import DataValueCard from "./DataValueCard";
 import LiveFeed from "./LiveFeed";
 import OutlookChart from "./OutlookChart";
@@ -70,6 +73,11 @@ export default function Dashboard({ lang, tastings, onReset }: { lang: Lang; tas
         </Card>
       </div>
 
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.5fr_1fr]">
+        <VirtualTasting rows={rows} lang={lang} />
+        <AskData rows={rows} lang={lang} />
+      </div>
+
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <Card title={t("segTitle", lang)} lead={t("segLead", lang)}>
           <SegmentBubbles data={segs} lang={lang} />
@@ -79,6 +87,8 @@ export default function Dashboard({ lang, tastings, onReset }: { lang: Lang; tas
           <p className="mt-4 font-display text-[20px] italic text-champagne">{t("outInsight", lang)}</p>
         </Card>
       </div>
+
+      <Tomorrow rows={rows} lang={lang} />
 
       <DataValueCard v={value} lang={lang} />
     </section>

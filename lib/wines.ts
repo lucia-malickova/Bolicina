@@ -223,10 +223,19 @@ export function kcalPerGlass(w: Wine) {
  * Logarithmic, because perceived sweetness grows roughly with the log of sugar.
  */
 export function realSweetness(w: Wine) {
+  return sweetnessFromSugar(sugarMid(w));
+}
+
+export function sweetnessFromSugar(gramsPerLitre: number) {
   const lo = Math.log(5);
   const hi = Math.log(47);
-  const s = 1 + (4 * (Math.log(sugarMid(w)) - lo)) / (hi - lo);
+  const s = 1 + (4 * (Math.log(Math.max(1, gramsPerLitre)) - lo)) / (hi - lo);
   return Math.min(5, Math.max(1, s));
+}
+
+/** Same estimate as kcalPerGlass, for a wine that doesn't exist yet. */
+export function kcalFor(abv: number, sugarGramsPerLitre: number) {
+  return Math.round(GLASS_ML * (abv / 100) * 0.789 * 7 + ((sugarGramsPerLitre * GLASS_ML) / 1000) * 4);
 }
 
 export function fmt(n: number, lang: "it" | "en", digits = 1) {

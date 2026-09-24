@@ -43,8 +43,8 @@ export default function Stage() {
 
       <header className="relative z-20 mx-auto flex max-w-[1520px] items-center justify-between gap-4 px-4 py-5 sm:px-8">
         <div className="flex items-baseline gap-3">
-          <span className="font-display text-[24px] tracking-[0.34em] text-champagne">SERENA</span>
-          <span className="text-[10px] tracking-[0.45em] text-smoke">1881</span>
+          <span className="font-display text-[30px] italic tracking-[0.1em] text-champagne">Bollicine</span>
+          <span className="text-[10px] uppercase tracking-[0.45em] text-smoke">Serena 1881</span>
           <span className="hidden text-[10px] uppercase tracking-[0.4em] text-smoke md:inline">· Sommelier</span>
         </div>
         <div className="flex items-center gap-3">
@@ -112,6 +112,7 @@ export default function Stage() {
               onTasting={add}
               auto={auto}
               onAutoDone={nextAuto}
+              history={tastings.filter((x) => x.name === persona.name)}
             />
           </PhoneFrame>
           <p className="max-w-[360px] text-center text-[11px] leading-relaxed text-smoke">{t("simulation", lang)}</p>

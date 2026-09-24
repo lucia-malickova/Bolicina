@@ -1,4 +1,8 @@
+"use client";
+
+import { Share2 } from "lucide-react";
 import { t } from "@/lib/i18n";
+import { shareCard } from "@/lib/shareCard";
 import type { Lang } from "@/lib/i18n";
 import { identityFor } from "@/lib/tasting";
 import { WINES, fmt } from "@/lib/wines";
@@ -71,9 +75,18 @@ export default function Reward({
         </div>
       </div>
 
-      <button onClick={onClose} className="btn-ghost mt-8 px-8 py-3 text-[12px] uppercase tracking-[0.25em]">
-        {t("done", lang)}
-      </button>
+      <div className="mt-8 flex gap-3">
+        <button
+          onClick={() => shareCard(id, lang)}
+          className="btn flex items-center gap-2 px-6 py-3 text-[12px] font-semibold uppercase tracking-[0.2em]"
+        >
+          <Share2 strokeWidth={1.6} className="size-4" />
+          {t("share", lang)}
+        </button>
+        <button onClick={onClose} className="btn-ghost px-6 py-3 text-[12px] uppercase tracking-[0.2em]">
+          {t("done", lang)}
+        </button>
+      </div>
     </div>
   );
 }

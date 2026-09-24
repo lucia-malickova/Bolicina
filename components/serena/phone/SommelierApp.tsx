@@ -1,14 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowUp, ChevronLeft, ScanLine, Sparkles } from "lucide-react";
+import { ArrowUp, ChevronLeft, Mic, ScanLine, Sparkles } from "lucide-react";
 import { t } from "@/lib/i18n";
 import type { Lang } from "@/lib/i18n";
 import { COMPANY, MOMENTS, MOODS, SEGMENTS } from "@/lib/personas";
 import type { Company, Moment, Mood, Persona, Segment } from "@/lib/personas";
 import { fitFor, recommend } from "@/lib/sommelier";
+import { useDictation } from "@/lib/useDictation";
 import type { Recommendation } from "@/lib/sommelier";
+import { identityFor, sweetKey } from "@/lib/tasting";
 import type { Tasting } from "@/lib/tasting";
+import { AROMAS } from "@/lib/wines";
 import { WINES, WINE_IDS, realSweetness } from "@/lib/wines";
 import type { WineId } from "@/lib/wines";
 import Bubbles from "../Bubbles";
@@ -44,6 +47,7 @@ export default function SommelierApp({
   framed = true,
   auto = false,
   onAutoDone,
+  history = [],
 }: {
   lang: Lang;
   persona: Persona | null;
@@ -51,6 +55,7 @@ export default function SommelierApp({
   framed?: boolean;
   auto?: boolean;
   onAutoDone?: () => void;
+  history?: Tasting[];
 }) {
   const [guestSegment, setGuestSegment] = useState<Segment | null>(null);
   const [screen, setScreen] = useState<Screen>(persona ? "home" : "age");
@@ -90,6 +95,8 @@ export default function SommelierApp({
 
   const name = persona?.name ?? t("guest", lang);
   const usualSweet = persona?.usualSweet ?? lastSweet;
+  const last = history[history.length - 1];
+  const before = [...history].reverse().find((h) => h.wine === wine);
 
   const chooseAge = (s: Segment) => {
     setGuestSegment(s);
@@ -161,6 +168,7 @@ export default function SommelierApp({
           <Home
             lang={lang}
             name={name}
+            last={last}
             onAsk={() => setScreen("ask")}
             onScan={() => {
               setReco(null);
@@ -218,6 +226,11 @@ export default function SommelierApp({
               id={wine}
               lang={lang}
               fit={usualSweet !== null ? fitFor(wine, usualSweet) : undefined}
+              memory={
+                before
+                  ? `${t("tastedBefore", lang)}: ${t("youFound", lang)} ${t(sweetKey(before.sweet), lang).toLowerCase()}, ${AROMAS[before.aroma][lang].toLowerCase()}.`
+                  : undefined
+              }
               onTaste={() => setScreen("taste")}
             />
           </div>
@@ -253,8 +266,8 @@ export default function SommelierApp({
 function Wordmark({ small = false }: { small?: boolean }) {
   return (
     <div className="flex flex-col items-center leading-none">
-      <span className={`font-display tracking-[0.34em] text-champagne ${small ? "text-[15px]" : "text-[22px]"}`}>SERENA</span>
-      <span className={`mt-1 tracking-[0.5em] text-smoke ${small ? "text-[7px]" : "text-[9px]"}`}>1881</span>
+      <span className={`font-display italic tracking-[0.12em] text-champagne ${small ? "text-[19px]" : "text-[30px]"}`}>Bollicine</span>
+      <span className={`mt-1 uppercase tracking-[0.42em] text-smoke ${small ? "text-[7px]" : "text-[9px]"}`}>Serena 1881</span>
     </div>
   );
 }
@@ -280,16 +293,35 @@ function AgeScreen({ lang, onPick }: { lang: Lang; onPick: (s: Segment) => void 
   );
 }
 
-function Home({ lang, name, onAsk, onScan }: { lang: Lang; name: string; onAsk: () => void; onScan: () => void }) {
+function Home({
+  lang,
+  name,
+  last,
+  onAsk,
+  onScan,
+}: {
+  lang: Lang;
+  name: string;
+  last?: Tasting;
+  onAsk: () => void;
+  onScan: () => void;
+}) {
   return (
     <div className="enter flex min-h-full flex-col items-center px-7 pb-10 pt-8">
       <Wordmark />
-      <p className="mt-12 text-[11px] uppercase tracking-[0.42em] text-smoke">
-        {t("hello", lang)}, {name}
+      <p className="mt-12 text-center text-[11px] uppercase tracking-[0.42em] text-smoke">
+        {last ? t("welcomeBack", lang) : t("hello", lang)}, {name}
       </p>
       <h1 className="mt-3 text-center font-display text-[44px] italic leading-[1.02] text-pearl">{t("homeLead", lang)}</h1>
+      {last && (
+        <p className="enter mt-4 flex items-center gap-2 rounded-full hairline px-4 py-1.5 text-[11px] text-mist">
+          <span className="text-smoke">{t("lastTime", lang)}</span>
+          <span className="text-pearl">{WINES[last.wine].name}</span>·
+          <span className="italic text-champagne">{identityFor(last).name[lang]}</span>
+        </p>
+      )}
 
-      <div className="relative mt-10 h-[380px] w-full">
+      <div className={`relative w-full ${last ? "mt-6 h-[350px]" : "mt-10 h-[380px]"}`}>
         <div className="absolute left-1/2 top-2 -translate-x-[58%]">
           <span aria-hidden className="pulse-ring absolute inset-0 rounded-full border border-champagne/40" />
           <button onClick={onAsk} className="orb float flex size-[210px] flex-col items-center justify-center gap-3 text-pearl">
@@ -376,6 +408,7 @@ function Ask({
   const typed = useTypewriter(persona?.message[lang] ?? "", 55, !!persona && edited === null);
   const send = useRef(onSend);
   send.current = onSend;
+  const voice = useDictation(lang, (said) => setEdited(said));
   const text = edited ?? typed.shown;
   const full = edited ?? persona?.message[lang] ?? "";
   const canSend = full.trim().length > 0 || !!mood || !!moment;
@@ -396,14 +429,29 @@ function Ask({
         <ChipRow label={t("moment", lang)} options={MOMENTS} value={moment} onChange={setMoment} lang={lang} />
       </div>
       <div className="mt-auto px-4 pt-8">
-        <div className="glass flex items-end gap-3 rounded-[28px] p-3 pl-5">
+        {voice.listening && (
+          <p className="shimmer mb-2 text-center text-[12px] uppercase tracking-[0.3em]">{t("listening", lang)}</p>
+        )}
+        <div className="glass flex items-end gap-2 rounded-[28px] p-3 pl-5">
           <textarea
             value={text}
             onChange={(e) => setEdited(e.target.value)}
-            placeholder={t("tellMore", lang)}
+            placeholder={voice.supported ? t("tellOrSpeak", lang) : t("tellMore", lang)}
             rows={3}
             className="min-h-[72px] flex-1 resize-none bg-transparent py-2 text-[15px] leading-relaxed text-pearl placeholder:text-smoke focus:outline-none"
           />
+          {voice.supported && (
+            <button
+              onClick={voice.toggle}
+              aria-label={t("speak", lang)}
+              aria-pressed={voice.listening}
+              data-on={voice.listening}
+              className="orb relative flex size-12 shrink-0 items-center justify-center text-champagne data-[on=true]:text-night"
+            >
+              {voice.listening && <span aria-hidden className="pulse-ring absolute inset-0 rounded-full border border-champagne" />}
+              <Mic strokeWidth={1.5} className="size-5" />
+            </button>
+          )}
           <button
             onClick={() => canSend && onSend(full, { mood, company, moment })}
             disabled={!canSend}

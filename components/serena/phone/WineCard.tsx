@@ -10,7 +10,19 @@ import WineVisual from "../WineVisual";
 
 const FIT_KEY = { match: "matchYou", sweeter: "sweeterThanYou", drier: "drierThanYou" } as const;
 
-export default function WineCard({ id, lang, fit, onTaste }: { id: WineId; lang: Lang; fit?: Fit; onTaste: () => void }) {
+export default function WineCard({
+  id,
+  lang,
+  fit,
+  memory,
+  onTaste,
+}: {
+  id: WineId;
+  lang: Lang;
+  fit?: Fit;
+  memory?: string;
+  onTaste: () => void;
+}) {
   const w = WINES[id];
   const [ordered, setOrdered] = useState(false);
 
@@ -33,6 +45,8 @@ export default function WineCard({ id, lang, fit, onTaste }: { id: WineId; lang:
           {t(FIT_KEY[fit], lang)}
         </p>
       )}
+
+      {memory && <p className="relative mt-2 text-[13px] italic text-champagne">{memory}</p>}
 
       <p className="relative mt-3 text-[13px] leading-relaxed text-mist">{w.pitch[lang]}</p>
 

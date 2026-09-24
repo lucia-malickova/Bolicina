@@ -119,3 +119,7 @@ export function identityFor(t: Pick<Tasting, "sweet" | "aroma" | "bubbles" | "wi
     next: t.wine === "bio" ? "valdobbiadene" : "bio",
   };
 }
+
+export function sweetKey(sweet: number): "dry" | "balanced" | "sweet" {
+  return sweet <= 2 ? "dry" : sweet < 3.5 ? "balanced" : "sweet";
+}

@@ -18,8 +18,11 @@ const ui = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "Serena 1881 · Sommelier",
+  title: "Bollicine · Serena 1881",
   description: "A personal sommelier for every Serena guest, and live consumer intelligence for the winery.",
+  manifest: "/manifest.webmanifest",
+  icons: { icon: "/icon-192.png", apple: "/apple-touch-icon.png" },
+  appleWebApp: { capable: true, title: "Bollicine", statusBarStyle: "black-translucent" },
 };
 
 export const viewport: Viewport = {
