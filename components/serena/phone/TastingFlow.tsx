@@ -6,7 +6,10 @@ import type { Lang, UIKey } from "@/lib/i18n";
 import type { Again, Bubbles } from "@/lib/tasting";
 import { AROMAS, WINES, fmt } from "@/lib/wines";
 import type { Aroma, WineId } from "@/lib/wines";
+import { Mic } from "lucide-react";
+import type { Heard } from "@/lib/speechTasting";
 import WineVisual from "../WineVisual";
+import SayIt from "./SayIt";
 
 export interface TastingResult {
   sweet: number;
@@ -38,6 +41,7 @@ export default function TastingFlow({
   const [bubbles, setBubbles] = useState<Bubbles | null>(null);
   const [aroma, setAroma] = useState<Aroma | null>(null);
   const [popped, setPopped] = useState<string | null>(null);
+  const [voiceOpen, setVoiceOpen] = useState(false);
 
   useEffect(() => {
     const id = setInterval(() => setElapsed((Date.now() - start.current) / 1000), 100);
@@ -75,6 +79,24 @@ export default function TastingFlow({
     }, 380);
   };
 
+  const applyHeard = (h: Heard) => {
+    setVoiceOpen(false);
+    if (h.sweet !== undefined) setSweet(h.sweet);
+    if (h.bubbles) setBubbles(h.bubbles);
+    if (h.aroma) setAroma(h.aroma);
+    if (h.sweet !== undefined && h.bubbles && h.aroma && h.again) {
+      onDone({
+        sweet: h.sweet,
+        bubbles: h.bubbles,
+        aroma: h.aroma,
+        again: h.again,
+        seconds: Math.round((Date.now() - start.current) / 100) / 10,
+      });
+      return;
+    }
+    setStep(h.sweet === undefined ? 0 : !h.bubbles ? 1 : !h.aroma ? 2 : 3);
+  };
+
   const w = WINES[wine];
   const intPart = Math.floor(sweet);
   const sweetLabel = t(SWEET_LABELS[Math.min(4, Math.round(sweet) - 1)], lang);
@@ -103,10 +125,19 @@ export default function TastingFlow({
           />
         ))}
       </div>
-      <p className="mt-3 text-[12px] text-smoke">{t("tastingLead", lang)}</p>
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <p className="text-[12px] text-smoke">{t("tastingLead", lang)}</p>
+        {!auto && !voiceOpen && (
+          <button onClick={() => setVoiceOpen(true)} className="chip flex shrink-0 items-center gap-1.5 px-3 py-1.5 text-[11px] text-champagne">
+            <Mic strokeWidth={1.5} className="size-3.5" />
+            {t("sayIt", lang)}
+          </button>
+        )}
+      </div>
 
-      <div key={step} className="enter flex flex-1 flex-col items-center justify-center py-6">
-        {step === 0 && (
+      <div key={voiceOpen ? "voice" : step} className="enter flex flex-1 flex-col items-center justify-center py-6">
+        {voiceOpen && <SayIt lang={lang} onApply={applyHeard} onClose={() => setVoiceOpen(false)} />}
+        {!voiceOpen && step === 0 && (
           <div className="flex w-full flex-col items-center">
             <Question>{t("qSweet", lang)}</Question>
             <p className="mt-8 font-display text-[54px] italic leading-none text-pearl">{sweetLabel}</p>
@@ -144,7 +175,7 @@ export default function TastingFlow({
           </div>
         )}
 
-        {step === 1 && (
+        {!voiceOpen && step === 1 && (
           <>
             <Question>{t("qBubbles", lang)}</Question>
             <div className="mt-10 flex items-end justify-center gap-5">
@@ -167,7 +198,7 @@ export default function TastingFlow({
           </>
         )}
 
-        {step === 2 && (
+        {!voiceOpen && step === 2 && (
           <>
             <Question>{t("qAroma", lang)}</Question>
             <div className="mt-8 grid grid-cols-2 gap-x-6 gap-y-5">
@@ -185,7 +216,7 @@ export default function TastingFlow({
           </>
         )}
 
-        {step === 3 && (
+        {!voiceOpen && step === 3 && (
           <>
             <Question>{t("qAgain", lang)}</Question>
             <div className="mt-10 flex items-center justify-center gap-5">

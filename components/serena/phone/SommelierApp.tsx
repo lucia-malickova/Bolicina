@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowUp, ChevronLeft, Compass, Gift as GiftIcon, Mic, ScanLine, Sparkles } from "lucide-react";
+import { ArrowUp, ChevronLeft, Compass, Gift as GiftIcon, Mic, PenTool, ScanLine, Sparkles } from "lucide-react";
 import { t } from "@/lib/i18n";
 import type { Lang } from "@/lib/i18n";
 import { COMPANY, MOMENTS, MOODS, SEGMENTS } from "@/lib/personas";
@@ -18,13 +18,21 @@ import Bubbles from "../Bubbles";
 import WineVisual from "../WineVisual";
 import TastingFlow from "./TastingFlow";
 import type { AutoAnswers, TastingResult } from "./TastingFlow";
+import { CITY_NAMES } from "@/lib/geo";
+import type { City } from "@/lib/geo";
+import type { LabelChoice } from "@/lib/market";
+import type { VenueId } from "@/lib/venues";
 import Gift from "./Gift";
+import LabelVote from "./LabelVote";
+import LivingLabel from "./LivingLabel";
+import Wrapped from "./Wrapped";
+import type { WrappedData } from "./Wrapped";
 import Reward from "./Reward";
-import TasteMap from "./TasteMap";
+import TasteMap, { driftKey } from "./TasteMap";
 import type { TastePoint } from "./TasteMap";
 import WineCard from "./WineCard";
 
-type Screen = "age" | "home" | "ask" | "reco" | "scan" | "scanned" | "taste" | "reward" | "map" | "gift";
+type Screen = "age" | "home" | "ask" | "reco" | "scan" | "scanned" | "taste" | "reward" | "map" | "gift" | "label";
 
 const AGE_KEY = "serena.segment";
 
@@ -52,6 +60,8 @@ export default function SommelierApp({
   onAutoDone,
   history = [],
   gift,
+  venue,
+  onVote,
 }: {
   lang: Lang;
   persona: Persona | null;
@@ -61,7 +71,12 @@ export default function SommelierApp({
   onAutoDone?: () => void;
   history?: Tasting[];
   gift?: { wine: WineId; from: string };
+  venue?: VenueId;
+  onVote?: (c: LabelChoice) => void;
 }) {
+  const [story, setStory] = useState(false);
+  const [showWrapped, setShowWrapped] = useState(false);
+  const [lastTasting, setLastTasting] = useState<Tasting | null>(null);
   const [guestSegment, setGuestSegment] = useState<Segment | null>(null);
   const [screen, setScreen] = useState<Screen>(persona ? "home" : "age");
   const [reco, setReco] = useState<Recommendation | null>(null);
@@ -119,6 +134,28 @@ export default function SommelierApp({
     ...history.map((h) => ({ sweet: h.sweet, aroma: h.aroma })),
   ];
 
+  const favourite = (() => {
+    const counts = new Map<WineId, number>();
+    history.forEach((h) => counts.set(h.wine, (counts.get(h.wine) ?? 0) + 1));
+    return [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? persona?.wine ?? "medea";
+  })();
+  const ALL_CITIES = Object.keys(CITY_NAMES) as City[];
+  const wrapped: WrappedData = {
+    year: new Date().getFullYear(),
+    count: (persona ? 14 + (persona.age % 11) : 0) + history.length,
+    percentile: persona ? 60 + (persona.age % 30) : Math.min(95, 40 + history.length * 8),
+    wine: favourite,
+    drift: t(driftKey(tastePoints), lang),
+    cities: persona
+      ? [persona.city, ALL_CITIES[(persona.age * 7) % ALL_CITIES.length], ALL_CITIES[(persona.age * 13 + 5) % ALL_CITIES.length]]
+          .filter((c, i, arr) => arr.indexOf(c) === i)
+          .map((c) => CITY_NAMES[c])
+      : [...new Set(history.map((h) => CITY_NAMES[h.city ?? "conegliano"]))],
+    identity: identityFor(
+      last ?? { sweet: persona?.usualSweet ?? 3, aroma: WINES[favourite].aromas[0], bubbles: "lively", wine: favourite },
+    ),
+  };
+
   const chooseAge = (s: Segment) => {
     setGuestSegment(s);
     try {
@@ -129,7 +166,7 @@ export default function SommelierApp({
 
   const finishTasting = (r: TastingResult) => {
     const segment = persona?.segment ?? guestSegment ?? "25-34";
-    onTasting({
+    const tasting: Tasting = {
       id: newId(),
       at: Date.now(),
       name: persona?.name ?? t("guest", "it"),
@@ -143,8 +180,11 @@ export default function SommelierApp({
       company: context.company ?? persona?.company,
       moment: context.moment ?? persona?.moment,
       city: persona?.city ?? "conegliano",
+      venue: venue ?? persona?.venue,
       seconds: r.seconds,
-    });
+    };
+    onTasting(tasting);
+    setLastTasting(tasting);
     setLastSweet(r.sweet);
     setResult(r);
     setDone((d) => d + 1);
@@ -197,8 +237,11 @@ export default function SommelierApp({
               if (!gift) return;
               setReco(null);
               setWine(gift.wine);
+              setStory(true);
               setScreen("scanned");
             }}
+            onWrapped={() => setShowWrapped(true)}
+            onLabel={() => setScreen("label")}
             onMap={() => setScreen("map")}
             onAsk={() => setScreen("ask")}
             onScan={() => {
@@ -244,6 +287,7 @@ export default function SommelierApp({
             lang={lang}
             onRecognised={(id) => {
               setWine(id);
+              if (!auto) setStory(true);
               setScreen("scanned");
             }}
           />
@@ -273,6 +317,15 @@ export default function SommelierApp({
 
         {screen === "gift" && <Gift lang={lang} wine={wine} from={name} onDone={() => setScreen(giftBack)} />}
 
+        {screen === "label" && (
+          <LabelVote
+            lang={lang}
+            segment={persona?.segment ?? guestSegment ?? "25-34"}
+            onVote={(c) => onVote?.(c)}
+            onDone={() => setScreen("home")}
+          />
+        )}
+
         {screen === "taste" && (
           <TastingFlow
             key={wine}
@@ -293,9 +346,13 @@ export default function SommelierApp({
               setReco(null);
               setScreen("home");
             }}
+            onPrice={(pay) => lastTasting && onTasting({ ...lastTasting, pay })}
           />
         )}
       </div>
+
+      {story && screen === "scanned" && <LivingLabel wine={wine} lang={lang} onDone={() => setStory(false)} />}
+      {showWrapped && <Wrapped lang={lang} d={wrapped} onClose={() => setShowWrapped(false)} />}
     </div>
   );
 }
@@ -340,6 +397,8 @@ function Home({
   onMap,
   onAsk,
   onScan,
+  onWrapped,
+  onLabel,
 }: {
   lang: Lang;
   name: string;
@@ -349,6 +408,8 @@ function Home({
   onMap: () => void;
   onAsk: () => void;
   onScan: () => void;
+  onWrapped: () => void;
+  onLabel: () => void;
 }) {
   return (
     <div className="enter flex min-h-full flex-col items-center px-7 pb-10 pt-8">
@@ -374,7 +435,18 @@ function Home({
         </p>
       )}
 
-      <div className={`relative w-full ${last ? "mt-6 h-[350px]" : "mt-10 h-[380px]"}`}>
+      <div className="mt-4 flex gap-2">
+        <button onClick={onWrapped} className="chip flex items-center gap-1.5 px-3 py-1.5 text-[11px] text-champagne">
+          <Sparkles strokeWidth={1.4} className="size-3.5" />
+          {t("wrappedCta", lang)}
+        </button>
+        <button onClick={onLabel} className="chip flex items-center gap-1.5 px-3 py-1.5 text-[11px] text-champagne">
+          <PenTool strokeWidth={1.4} className="size-3.5" />
+          {t("labelCta", lang)}
+        </button>
+      </div>
+
+      <div className={`relative w-full ${last ? "mt-4 h-[340px]" : "mt-6 h-[370px]"}`}>
         <div className="absolute left-1/2 top-2 -translate-x-[58%]">
           <span aria-hidden className="pulse-ring absolute inset-0 rounded-full border border-champagne/40" />
           <button onClick={onAsk} className="orb float flex size-[210px] flex-col items-center justify-center gap-3 text-pearl">

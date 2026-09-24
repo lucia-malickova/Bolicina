@@ -18,6 +18,19 @@ const py = (y: number) => S - PAD - y * (S - 2 * PAD);
 // Small deterministic spread so repeated tastings don't sit on one pixel.
 const jitter = (i: number) => Math.sin(i * 12.9898) * 0.035;
 
+/** The i18n key describing how a guest's taste moved from their first to their latest tastings. */
+export function driftKey(points: TastePoint[]) {
+  if (points.length < 2) return "mapStable" as const;
+  const pts = points.map((p) => ({ x: p.sweet, y: AROMA_Y[p.aroma] }));
+  const recent = pts.slice(-3);
+  const cur = { x: recent.reduce((s, p) => s + p.x, 0) / recent.length, y: recent.reduce((s, p) => s + p.y, 0) / recent.length };
+  const dx = cur.x - pts[0].x;
+  const dy = cur.y - pts[0].y;
+  if (Math.abs(dx) >= Math.abs(dy) * 4 && Math.abs(dx) > 0.35) return dx < 0 ? ("mapToDry" as const) : ("mapToSoft" as const);
+  if (Math.abs(dy) > 0.12) return dy < 0 ? ("mapToMineral" as const) : ("mapToFruity" as const);
+  return "mapStable" as const;
+}
+
 export default function TasteMap({ lang, points }: { lang: Lang; points: TastePoint[] }) {
   const pts = points.map((p, i) => ({ x: p.sweet, y: AROMA_Y[p.aroma] + jitter(i) }));
   const recent = pts.slice(-3);

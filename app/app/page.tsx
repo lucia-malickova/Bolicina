@@ -7,6 +7,9 @@ import SommelierApp from "@/components/serena/phone/SommelierApp";
 import { t } from "@/lib/i18n";
 import type { Lang } from "@/lib/i18n";
 import { useTastings } from "@/lib/useTastings";
+import { useVotes } from "@/lib/useVotes";
+import { isVenue } from "@/lib/venues";
+import type { VenueId } from "@/lib/venues";
 import { WINES } from "@/lib/wines";
 import type { WineId } from "@/lib/wines";
 
@@ -15,12 +18,17 @@ export default function GuestApp() {
   const [online, setOnline] = useState(true);
   const [gift, setGift] = useState<{ wine: WineId; from: string } | undefined>();
   const { tastings, add, pending } = useTastings(false, "bollicine.mine");
+  const { vote } = useVotes(false);
+  const [venue, setVenue] = useState<VenueId | undefined>();
 
   useEffect(() => {
     if (process.env.NODE_ENV === "production" && "serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js").catch(() => {});
     }
     const q = new URLSearchParams(window.location.search);
+    // A venue's own QR code (on its menu or table) opens /app?locale=<venue>.
+    const locale = q.get("locale");
+    if (isVenue(locale)) setVenue(locale);
     const dono = q.get("dono");
     if (dono && Object.hasOwn(WINES, dono)) setGift({ wine: dono as WineId, from: (q.get("da") || "").slice(0, 30) || "Bollicine" });
     const sync = () => setOnline(navigator.onLine);
@@ -46,7 +54,17 @@ export default function GuestApp() {
         )}
         <LangToggle lang={lang} onChange={setLang} />
       </div>
-      <SommelierApp lang={lang} persona={null} onTasting={add} framed={false} history={tastings} gift={gift} />
+      <SommelierApp lang={lang} persona={null} onTasting={add} framed={false} history={tastings}
+        gift={gift}
+        venue={venue}
+        onVote={(choice) => {
+          let segment = "25-34";
+          try {
+            segment = localStorage.getItem("serena.segment") || segment;
+          } catch {}
+          vote({ id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`, choice, segment });
+        }}
+      />
     </div>
   );
 }

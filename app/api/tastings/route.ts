@@ -22,7 +22,10 @@ export async function POST(req: Request) {
   const tasting = parseTasting(await req.json().catch(() => null));
   if (!tasting) return NextResponse.json({ error: "invalid tasting" }, { status: 400 });
   const all = list();
-  if (!all.some((t) => t.id === tasting.id)) {
+  const i = all.findIndex((t) => t.id === tasting.id);
+  // Same id again = the guest added something (e.g. a price) to a tasting they already sent.
+  if (i >= 0) all[i] = tasting;
+  else {
     all.push(tasting);
     if (all.length > MAX) all.splice(0, all.length - MAX);
   }

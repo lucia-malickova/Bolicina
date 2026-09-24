@@ -109,10 +109,14 @@ function buildBaseline(): Row[] {
       const aromaWeights: Partial<Record<Aroma, number>> = { flowers: 0.03, apple: 0.03, yellowFruit: 0.03, mineral: 0.03 };
       w.aromas.forEach((a, k) => (aromaWeights[a] = [0.55, 0.3, 0.15][k]));
       const aroma = pick(rand, aromaWeights);
+      // Illustrative story for lot quality: one Medea lot (months 6–8) reaches guests flatter.
+      const staleLot = wine === "medea" && month >= 6 && month <= 8;
       const bubbles: Bubbles =
         wine === "frizzante"
           ? pick(rand, { delicate: 70, lively: 25, explosive: 5 })
-          : pick(rand, { delicate: 25, lively: 55, explosive: segment === "18-24" ? 35 : 20 });
+          : staleLot
+            ? pick(rand, { delicate: 60, lively: 32, explosive: 8 })
+            : pick(rand, { delicate: 25, lively: 55, explosive: segment === "18-24" ? 35 : 20 });
       // Illustrative story for the alerts: Medea is losing 25–34 year-olds over the last quarter.
       const slipping = wine === "medea" && segment === "25-34" && month >= MONTHS - 3 ? 0.3 : 0;
       const yes = AGAIN_YES[wine] + (segment === "18-24" && (wine === "ice" || wine === "zero") ? 0.12 : 0) - slipping;

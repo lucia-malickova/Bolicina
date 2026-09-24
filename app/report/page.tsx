@@ -8,6 +8,7 @@ import { t } from "@/lib/i18n";
 import type { Lang } from "@/lib/i18n";
 import { BASELINE, MONTHS, againShare, outlook, perception, toRow, zeroShare } from "@/lib/insights";
 import { missingWine } from "@/lib/simulate";
+import { venueRadar } from "@/lib/venues";
 import { useTastings } from "@/lib/useTastings";
 import { AROMAS, WINES, dosage, fmt, int } from "@/lib/wines";
 
@@ -26,7 +27,7 @@ export default function Report() {
   const out = useMemo(() => outlook(rows), [rows]);
   const todo = useMemo(() => actions(rows, perc, out), [rows, perc, out]);
   const value = useMemo(() => dataValue(rows), [rows]);
-  const news = useMemo(() => alerts(rows, []), [rows]);
+  const news = useMemo(() => alerts(rows, [], venueRadar(tastings)), [rows, tastings]);
   const gap = useMemo(() => missingWine(rows), [rows]);
   const gaps = [...perc].sort((a, b) => Math.abs(b.perceived - b.real) - Math.abs(a.perceived - a.real)).slice(0, 4);
   const today = new Date().toLocaleDateString(lang === "it" ? "it-IT" : "en-GB", { day: "numeric", month: "long", year: "numeric" });

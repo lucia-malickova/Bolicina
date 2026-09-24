@@ -3,6 +3,9 @@ import type { Row } from "./insights";
 import { MONTHS, againShare } from "./insights";
 import { SEGMENTS } from "./personas";
 import type { Tasting } from "./tasting";
+import { VENUES } from "./venues";
+import type { VenueRadar } from "./venues";
+import { CITY_NAMES } from "./geo";
 import { WINES, WINE_IDS } from "./wines";
 
 export interface Alert {
@@ -18,7 +21,7 @@ const recent = (r: Row) => r.month >= MONTHS - 3;
 const earlier = (r: Row) => r.month >= MONTHS - 9 && r.month < MONTHS - 3;
 
 /** Month-over-month changes worth a notification on the owner's phone, newest first. */
-export function alerts(rows: Row[], live: Tasting[]): Alert[] {
+export function alerts(rows: Row[], live: Tasting[], radar: VenueRadar[] = []): Alert[] {
   const list: Alert[] = [];
 
   const last = live[live.length - 1];
@@ -30,6 +33,21 @@ export function alerts(rows: Row[], live: Tasting[]): Alert[] {
       when: { it: "ora", en: "now" },
       title: { it: `Nuova degustazione · ${WINES[last.wine].name}`, en: `New tasting · ${WINES[last.wine].name}` },
       body: { it: `${last.name}, ${last.segment} anni, ${again.it}.`, en: `${last.name}, aged ${last.segment}, ${again.en}.` },
+    });
+  }
+
+  const bad = radar.find((r) => r.status === "check");
+  if (bad) {
+    const v = VENUES[bad.id];
+    list.push({
+      id: `venue-${bad.id}`,
+      trend: "down",
+      when: { it: "1 h fa", en: "1 h ago" },
+      title: {
+        it: `${v.name} · ${CITY_NAMES[v.city]}: ${WINES[v.wine].name} servito male`,
+        en: `${v.name} · ${CITY_NAMES[v.city]}: ${WINES[v.wine].name} poorly served`,
+      },
+      body: bad.reason,
     });
   }
 

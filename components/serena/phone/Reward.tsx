@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Share2 } from "lucide-react";
 import { t } from "@/lib/i18n";
 import { shareCard } from "@/lib/shareCard";
@@ -16,13 +17,16 @@ export default function Reward({
   wine,
   precision,
   onClose,
+  onPrice,
 }: {
   lang: Lang;
   result: TastingResult;
   wine: WineId;
   precision: number;
   onClose: () => void;
+  onPrice: (euros: number) => void;
 }) {
+  const [price, setPrice] = useState<number | null>(null);
   const id = identityFor({ ...result, wine });
   const next = WINES[id.next];
 
@@ -72,6 +76,26 @@ export default function Reward({
           <span className="text-[10px] uppercase tracking-[0.35em] text-smoke">{t("nextTry", lang)}</span>
           <span className="font-display text-[24px] leading-none">{next.name}</span>
           <span className="text-[12px] text-mist">{next.style[lang]}</span>
+        </div>
+      </div>
+
+      <div className="enter mt-7 flex w-full flex-col items-center gap-3" style={{ animationDelay: "0.65s" }}>
+        <p className="text-[12px] text-mist">{price ? t("payThanks", lang) : t("payQ", lang)}</p>
+        <div className="flex gap-2">
+          {[8, 12, 16, 22, 30].map((p) => (
+            <button
+              key={p}
+              data-on={price === p}
+              disabled={price !== null}
+              onClick={() => {
+                setPrice(p);
+                onPrice(p);
+              }}
+              className="chip px-3 py-1.5 text-[12px] tabular-nums disabled:cursor-default"
+            >
+              {p === 30 ? "30+" : p} €
+            </button>
+          ))}
         </div>
       </div>
 

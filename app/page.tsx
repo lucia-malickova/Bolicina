@@ -13,12 +13,14 @@ import type { Lang } from "@/lib/i18n";
 import { CITY_NAMES } from "@/lib/geo";
 import { PERSONAS } from "@/lib/personas";
 import { useTastings } from "@/lib/useTastings";
+import { useVotes } from "@/lib/useVotes";
 import { WINES } from "@/lib/wines";
 
 export default function Stage() {
   const [lang, setLang] = useState<Lang>("it");
   const [personaId, setPersonaId] = useState(PERSONAS[0].id);
   const { tastings, add, reset } = useTastings();
+  const { votes, vote, reset: resetVotes } = useVotes();
   const persona = PERSONAS.find((p) => p.id === personaId)!;
   const [auto, setAuto] = useState(false);
   const [run, setRun] = useState(0);
@@ -115,11 +117,20 @@ export default function Stage() {
               auto={auto}
               onAutoDone={nextAuto}
               history={tastings.filter((x) => x.name === persona.name)}
+              onVote={(choice) => vote({ id: `${Date.now().toString(36)}-${persona.id}`, choice, segment: persona.segment })}
             />
           </PhoneFrame>
           <p className="max-w-[360px] text-center text-[11px] leading-relaxed text-smoke">{t("simulation", lang)}</p>
         </div>
-        <Dashboard lang={lang} tastings={tastings} onReset={reset} />
+        <Dashboard
+          lang={lang}
+          tastings={tastings}
+          votes={votes}
+          onReset={() => {
+            reset();
+            resetVotes();
+          }}
+        />
       </main>
     </div>
   );

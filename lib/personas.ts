@@ -1,5 +1,6 @@
 import type { L10n } from "./i18n";
 import type { City } from "./geo";
+import type { VenueId } from "./venues";
 import type { WineId } from "./wines";
 
 export type Segment = "18-24" | "25-34" | "35-49" | "50-64" | "65+";
@@ -51,6 +52,7 @@ export interface Persona {
   /** Usual sweetness preference on the 1–5 tasting scale. */
   usualSweet: number;
   city: City;
+  venue?: VenueId;
 }
 
 export const PERSONAS: Persona[] = [
@@ -138,6 +140,7 @@ export const PERSONAS: Persona[] = [
     },
     usualSweet: 2.5,
     city: "london",
+    venue: "aurora",
   },
   {
     id: "chiara",
@@ -159,6 +162,7 @@ export const PERSONAS: Persona[] = [
     },
     usualSweet: 3,
     city: "bologna",
+    venue: "portici",
   },
   {
     id: "giorgio",
@@ -266,6 +270,7 @@ export const PERSONAS: Persona[] = [
     },
     usualSweet: 2,
     city: "newyork",
+    venue: "rooftop",
   },
   {
     id: "davide",

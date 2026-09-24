@@ -238,11 +238,11 @@ export function kcalFor(abv: number, sugarGramsPerLitre: number) {
   return Math.round(GLASS_ML * (abv / 100) * 0.789 * 7 + ((sugarGramsPerLitre * GLASS_ML) / 1000) * 4);
 }
 
+/** Fixed decimals with IT/EN separators, built by hand so server and browser always agree. */
 export function fmt(n: number, lang: "it" | "en", digits = 1) {
-  return n.toLocaleString(lang === "it" ? "it-IT" : "en-GB", {
-    minimumFractionDigits: digits,
-    maximumFractionDigits: digits,
-  });
+  const [whole, dec] = Math.abs(n).toFixed(digits).split(".");
+  const sign = n < 0 && Number(n.toFixed(digits)) !== 0 ? "-" : "";
+  return sign + int(Number(whole), lang) + (dec ? (lang === "it" ? "," : ".") + dec : "");
 }
 
 /** Integer with a thousands separator, identical on server and client (ICU builds differ). */

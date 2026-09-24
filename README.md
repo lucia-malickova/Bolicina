@@ -12,6 +12,7 @@ Fonts: Cormorant Garamond (display) and Manrope (UI) via `next/font`.
 - `/app` the guest app alone, full screen, for a real phone (the QR button on `/` points here).
   Installable (PWA) and works offline: see "Offline" below.
 - `/report` one-page board report of the live dashboard; "Salva come PDF" prints it.
+- `/api/votes` in-memory label votes.
 - `/api/tastings` in-memory store that lets tastings from phones reach the stage.
 
 ## What the demo shows
@@ -30,6 +31,13 @@ Fonts: Cormorant Garamond (display) and Manrope (UI) via `next/font`.
    the guest's point and leaves a trail. **Gift a glass:** the guest sends a wine with a
    message; the link (`/app?dono=…&da=…`) opens with a welcome banner for that wine.
    18+ and "drink responsibly" notices are shown in the app.
+   **Say it:** during the tasting the guest describes the wine in a sentence (voice or
+   text) and the four answers are filled in (`lib/speechTasting.ts`, runs on the phone).
+   **Living label:** after a scan, a short animated story per wine (Audace dives to −20 m).
+   **Your year in bubbles:** Wrapped-style stories ending on a shareable profile.
+   **Price question:** one tap on the reward screen ("how much would you pay?").
+   **Label vote:** two designs for a new bottle; the guest picks one.
+   A venue's own QR code opens `/app?locale=<venue>` so tastings carry the venue.
 6. **Autoplay.** "Demo automatica" runs all 11 guests while the presenter talks; tapping
    any guest stops it and hands control back.
 7. **Winery intelligence.** Tastings recorded, repurchase intent, Serena 0.0 among
@@ -43,6 +51,12 @@ Fonts: Cormorant Garamond (display) and Manrope (UI) via `next/font`.
    - *Avvisi*: owner notifications from month-over-month changes (ranked by significance);
    - *Il vino che vi manca*: searches wine specs for the biggest gap in the range, and
      loads it into the virtual tasting;
+   - *Radar qualità nei locali*: per venue, last 10 tastings vs the technical sheet (flat
+     bubbles, tastes sweeter = served warm); a flagged venue also raises an alert;
+   - *Qualità per lotto*: perceived freshness per bottling lot;
+   - *Prezzo e ricavo*: share who'd buy and revenue per 100 guests at the price you set,
+     +3 € scenario and revenue-maximising price;
+   - *Test etichetta*: label A vs B by age group, live votes included;
    - *Dove si assaggia Serena nel mondo*: live world map over Prosecco's main markets
      (Italy shown as one bubble with its top cities on hover); new tastings pulse.
 
@@ -58,7 +72,10 @@ Fonts: Cormorant Garamond (display) and Manrope (UI) via `next/font`.
 - Virtual tasting, tomorrow's forecast and data answers are simple, explainable estimates
   over the same data (`lib/simulate.ts`); weather coefficients are examples. The baseline
   seeds one story on purpose (Medea losing 25–34 year-olds in the last quarter) so the
-  alerts have something real to find. Baseline cities are illustrative.
+  alerts have something real to find, one Medea lot (L26-052) planted as flatter, and
+  one fictional venue (Hotel Aurora, London) serving it flat. Venues are fictional;
+  willingness-to-pay answers and earlier label votes are illustrative; the price in the
+  simulator is set by the user, not Serena's list price. Baseline cities are illustrative.
 - Voice uses the browser's own speech recogniser (Chrome, Safari). Chrome sends the audio
   to Google to transcribe, so it is neither offline nor on-premise; production would use
   a speech model on the winery's server or on the phone.
@@ -98,6 +115,7 @@ No environment variables.
 - `lib/simulate.ts` virtual tasting, data questions, tomorrow's forecast
 - `lib/useTastings.ts` live sync, offline queue, on-phone memory
 - `lib/useDictation.ts` voice input; `lib/shareCard.ts` shareable profile image
+- `lib/venues.ts` venue radar; `lib/market.ts` lots, willingness to pay, label votes
 - `lib/alerts.ts` owner notifications; `lib/geo.ts` + `lib/worldShapes.ts` the live map
   (outlines generated from Natural Earth via world-atlas, public domain)
 - `lib/tasting.ts` tasting type, payload validation, taste profiles

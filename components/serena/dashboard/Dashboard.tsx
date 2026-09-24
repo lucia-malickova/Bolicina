@@ -13,7 +13,13 @@ import { cityStats } from "@/lib/geo";
 import LiveMap from "./LiveMap";
 import { missingWine } from "@/lib/simulate";
 import type { NewWine } from "@/lib/simulate";
+import type { Vote } from "@/lib/market";
+import { venueRadar } from "@/lib/venues";
 import AlertsPanel from "./AlertsPanel";
+import LabelTest from "./LabelTest";
+import LotQuality from "./LotQuality";
+import PriceSim from "./PriceSim";
+import VenueRadar from "./VenueRadar";
 import MissingWine from "./MissingWine";
 import ActionsPanel from "./ActionsPanel";
 import AskData from "./AskData";
@@ -25,14 +31,25 @@ import OutlookChart from "./OutlookChart";
 import PerceptionChart from "./PerceptionChart";
 import SegmentBubbles from "./SegmentBubbles";
 
-export default function Dashboard({ lang, tastings, onReset }: { lang: Lang; tastings: Tasting[]; onReset: () => void }) {
+export default function Dashboard({
+  lang,
+  tastings,
+  votes,
+  onReset,
+}: {
+  lang: Lang;
+  tastings: Tasting[];
+  votes: Vote[];
+  onReset: () => void;
+}) {
   const rows = useMemo(() => [...BASELINE, ...tastings.map(toRow)], [tastings]);
   const perc = useMemo(() => perception(rows), [rows]);
   const segs = useMemo(() => segments(rows), [rows]);
   const out = useMemo(() => outlook(rows), [rows]);
   const todo = useMemo(() => actions(rows, perc, out), [rows, perc, out]);
   const value = useMemo(() => dataValue(rows), [rows]);
-  const news = useMemo(() => alerts(rows, tastings), [rows, tastings]);
+  const radar = useMemo(() => venueRadar(tastings), [tastings]);
+  const news = useMemo(() => alerts(rows, tastings, radar), [rows, tastings, radar]);
   const gap = useMemo(() => missingWine(rows), [rows]);
   const cities = useMemo(() => cityStats(BASELINE, tastings), [tastings]);
   const now = tastings.length ? Date.now() : 0;
@@ -110,6 +127,24 @@ export default function Dashboard({ lang, tastings, onReset }: { lang: Lang; tas
           <MissingWine m={gap} lang={lang} onTry={tryInVirtual} />
           <AskData rows={rows} lang={lang} />
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <Card title={t("radarTitle", lang)} lead={t("radarLead", lang)}>
+          <VenueRadar items={radar} lang={lang} />
+        </Card>
+        <Card title={t("lotTitle", lang)} lead={t("lotLead", lang)}>
+          <LotQuality rows={rows} lang={lang} />
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <Card title={t("priceTitle", lang)} lead={t("priceLead", lang)}>
+          <PriceSim live={tastings} lang={lang} />
+        </Card>
+        <Card title={t("lblTitle", lang)} lead={t("lblLead", lang)}>
+          <LabelTest votes={votes} lang={lang} />
+        </Card>
       </div>
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
