@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowUp, ChevronLeft, Compass, Gift as GiftIcon, Mic, PenTool, ScanLine, Sparkles } from "lucide-react";
+import { ArrowUp, ChevronLeft, Compass, Gift as GiftIcon, Home as HomeIcon, Mic, PenTool, ScanLine, Sparkles } from "lucide-react";
 import { t } from "@/lib/i18n";
 import type { Lang } from "@/lib/i18n";
 import { COMPANY, MOMENTS, MOODS, SEGMENTS } from "@/lib/personas";
@@ -18,10 +18,13 @@ import Bubbles from "../Bubbles";
 import WineVisual from "../WineVisual";
 import TastingFlow from "./TastingFlow";
 import type { AutoAnswers, TastingResult } from "./TastingFlow";
-import { CITY_NAMES } from "@/lib/geo";
+import { newBottle, seedCellar } from "@/lib/cellar";
+import type { Bottle } from "@/lib/cellar";
+import { CITY_NAMES, LONLAT } from "@/lib/geo";
 import type { City } from "@/lib/geo";
 import type { LabelChoice } from "@/lib/market";
 import type { VenueId } from "@/lib/venues";
+import Cellar from "./Cellar";
 import Gift from "./Gift";
 import LabelVote from "./LabelVote";
 import LivingLabel from "./LivingLabel";
@@ -32,7 +35,9 @@ import TasteMap, { driftKey } from "./TasteMap";
 import type { TastePoint } from "./TasteMap";
 import WineCard from "./WineCard";
 
-type Screen = "age" | "home" | "ask" | "reco" | "scan" | "scanned" | "taste" | "reward" | "map" | "gift" | "label";
+type Screen = "age" | "home" | "ask" | "reco" | "scan" | "scanned" | "taste" | "reward" | "map" | "gift" | "label" | "cellar";
+
+const CELLAR_KEY = "bollicine.cellar";
 
 const AGE_KEY = "serena.segment";
 
@@ -77,6 +82,26 @@ export default function SommelierApp({
   const [story, setStory] = useState(false);
   const [showWrapped, setShowWrapped] = useState(false);
   const [lastTasting, setLastTasting] = useState<Tasting | null>(null);
+  const [fromHome, setFromHome] = useState(false);
+  const [bottles, setBottles] = useState<Bottle[]>(() =>
+    persona ? seedCellar(persona.wine, persona.age, Date.now()) : [],
+  );
+
+  // A guest's own cellar lives on their phone.
+  useEffect(() => {
+    if (persona) return;
+    try {
+      const saved = JSON.parse(localStorage.getItem(CELLAR_KEY) ?? "[]");
+      if (Array.isArray(saved)) setBottles(saved);
+    } catch {}
+  }, [persona]);
+  const saveBottles = (next: Bottle[]) => {
+    setBottles(next);
+    if (persona) return;
+    try {
+      localStorage.setItem(CELLAR_KEY, JSON.stringify(next));
+    } catch {}
+  };
   const [guestSegment, setGuestSegment] = useState<Segment | null>(null);
   const [screen, setScreen] = useState<Screen>(persona ? "home" : "age");
   const [reco, setReco] = useState<Recommendation | null>(null);
@@ -180,9 +205,11 @@ export default function SommelierApp({
       company: context.company ?? persona?.company,
       moment: context.moment ?? persona?.moment,
       city: persona?.city ?? "conegliano",
-      venue: venue ?? persona?.venue,
+      venue: fromHome ? undefined : venue ?? persona?.venue,
+      home: fromHome || undefined,
       seconds: r.seconds,
     };
+    setFromHome(false);
     onTasting(tasting);
     setLastTasting(tasting);
     setLastSweet(r.sweet);
@@ -192,7 +219,7 @@ export default function SommelierApp({
   };
 
   const back = () => {
-    if (screen === "taste") setScreen(reco ? "reco" : "scanned");
+    if (screen === "taste") setScreen(fromHome ? "cellar" : reco ? "reco" : "scanned");
     else if (screen === "scanned") setScreen("scan");
     else if (screen === "gift") setScreen(giftBack);
     else setScreen("home");
@@ -241,6 +268,7 @@ export default function SommelierApp({
               setScreen("scanned");
             }}
             onWrapped={() => setShowWrapped(true)}
+            onCellar={() => setScreen("cellar")}
             onLabel={() => setScreen("label")}
             onMap={() => setScreen("map")}
             onAsk={() => setScreen("ask")}
@@ -316,6 +344,28 @@ export default function SommelierApp({
         {screen === "map" && <TasteMap lang={lang} points={tastePoints} />}
 
         {screen === "gift" && <Gift lang={lang} wine={wine} from={name} onDone={() => setScreen(giftBack)} />}
+
+        {screen === "cellar" && (
+          <Cellar
+            lang={lang}
+            bottles={bottles}
+            at={persona ? { lat: LONLAT[persona.city][1], lon: LONLAT[persona.city][0], place: CITY_NAMES[persona.city] } : undefined}
+            usualSweet={usualSweet}
+            onAdd={(w, source) => saveBottles([...bottles, newBottle(w, source)])}
+            onRemove={(w) => {
+              const i = bottles.findIndex((b) => b.wine === w);
+              if (i >= 0) saveBottles(bottles.filter((_, k) => k !== i));
+            }}
+            onOpen={(b, mood) => {
+              saveBottles(bottles.filter((x) => x.id !== b.id));
+              setReco(null);
+              setWine(b.wine);
+              setContext({ mood, moment: "evening" });
+              setFromHome(true);
+              setScreen("taste");
+            }}
+          />
+        )}
 
         {screen === "label" && (
           <LabelVote
@@ -399,6 +449,7 @@ function Home({
   onScan,
   onWrapped,
   onLabel,
+  onCellar,
 }: {
   lang: Lang;
   name: string;
@@ -410,6 +461,7 @@ function Home({
   onScan: () => void;
   onWrapped: () => void;
   onLabel: () => void;
+  onCellar: () => void;
 }) {
   return (
     <div className="enter flex min-h-full flex-col items-center px-7 pb-10 pt-8">
@@ -435,7 +487,11 @@ function Home({
         </p>
       )}
 
-      <div className="mt-4 flex gap-2">
+      <div className="mt-4 flex flex-wrap justify-center gap-2">
+        <button onClick={onCellar} className="chip flex items-center gap-1.5 px-3 py-1.5 text-[11px] text-champagne">
+          <HomeIcon strokeWidth={1.4} className="size-3.5" />
+          {t("cellar", lang)}
+        </button>
         <button onClick={onWrapped} className="chip flex items-center gap-1.5 px-3 py-1.5 text-[11px] text-champagne">
           <Sparkles strokeWidth={1.4} className="size-3.5" />
           {t("wrappedCta", lang)}

@@ -8,7 +8,10 @@ Fonts: Cormorant Garamond (display) and Manrope (UI) via `next/font`.
 
 ## Routes
 
-- `/` presenter stage: pick one of 11 guests, use the phone, watch the dashboard update.
+- `/` presenter stage with four views: **Ospite e cantina** (11 guests, phone, winery
+  dashboard), **Ristorante** (a venue's neutral wine list + venue dashboard), **Enoteca**
+  (shelf scan, click & collect, restock by weather), **Rete Bollicine** (24-month growth
+  and business-model simulation with editable prices, Prosecco Index, data rules).
 - `/app` the guest app alone, full screen, for a real phone (the QR button on `/` points here).
   Installable (PWA) and works offline: see "Offline" below.
 - `/report` one-page board report of the live dashboard; "Salva come PDF" prints it.
@@ -38,6 +41,10 @@ Fonts: Cormorant Garamond (display) and Manrope (UI) via `next/font`.
    **Price question:** one tap on the reward screen ("how much would you pay?").
    **Label vote:** two designs for a new bottle; the guest picks one.
    A venue's own QR code opens `/app?locale=<venue>` so tastings carry the venue.
+   **Home cellar (La mia cantina):** the guest keeps the bottles they own; tonight's pick
+   ranks them by live weather (Open-Meteo, from the phone's position rounded to ~10 km,
+   cached for offline, manual override), mood, usual taste and time in the cellar, with a
+   chilling tip. Opening a bottle starts a tasting marked `home`. Stored on the phone.
 6. **Autoplay.** "Demo automatica" runs all 11 guests while the presenter talks; tapping
    any guest stops it and hands control back.
 7. **Winery intelligence.** Tastings recorded, repurchase intent, Serena 0.0 among
@@ -79,6 +86,11 @@ Fonts: Cormorant Garamond (display) and Manrope (UI) via `next/font`.
 - Voice uses the browser's own speech recogniser (Chrome, Safari). Chrome sends the audio
   to Google to transcribe, so it is neither offline nor on-premise; production would use
   a speech model on the winery's server or on the phone.
+- The restaurant and shop views use fictional venues and anonymous "Produttore B–F"
+  wines; prices, counts and the network scenario (adoption curves, subscription prices,
+  founders' discount) are illustrative and editable, not forecasts.
+- Weather: on a real phone the forecast comes from Open-Meteo (no API key). Coordinates
+  leave the phone rounded; production would proxy this through the winery's server.
 - Tastings live in server memory. Phones share them only when one server process serves
   them all (`npm run build && npm start` on a laptop, phones on the same Wi-Fi). On
   Vercel, instances may not share memory, so the phone → stage link can miss.
@@ -114,6 +126,8 @@ No environment variables.
 - `lib/actions.ts` the three decisions and the data-value figures
 - `lib/simulate.ts` virtual tasting, data questions, tomorrow's forecast
 - `lib/useTastings.ts` live sync, offline queue, on-phone memory
+- `lib/cellar.ts` + `lib/useWeather.ts` home cellar and live weather; `lib/ecosystem.ts`
+  venue list, shelf, neutral ranking and the network scenario
 - `lib/useDictation.ts` voice input; `lib/shareCard.ts` shareable profile image
 - `lib/venues.ts` venue radar; `lib/market.ts` lots, willingness to pay, label votes
 - `lib/alerts.ts` owner notifications; `lib/geo.ts` + `lib/worldShapes.ts` the live map

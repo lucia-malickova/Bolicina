@@ -28,6 +28,8 @@ export interface Tasting {
   venue?: VenueId;
   /** Willingness to pay for the bottle, in euros (asked once, optional). */
   pay?: number;
+  /** Opened from the guest's home cellar. */
+  home?: boolean;
   seconds: number;
 }
 
@@ -53,6 +55,7 @@ export function parseTasting(x: unknown): Tasting | null {
   if (o.city !== undefined && !isCity(o.city)) return null;
   if (o.venue !== undefined && !isVenue(o.venue)) return null;
   if (o.pay !== undefined && !num(o.pay, 1, 500)) return null;
+  if (o.home !== undefined && typeof o.home !== "boolean") return null;
   return {
     id: o.id,
     at: o.at as number,
@@ -69,6 +72,7 @@ export function parseTasting(x: unknown): Tasting | null {
     city: o.city as City | undefined,
     venue: o.venue as VenueId | undefined,
     pay: o.pay as number | undefined,
+    home: o.home as boolean | undefined,
     seconds: o.seconds as number,
   };
 }

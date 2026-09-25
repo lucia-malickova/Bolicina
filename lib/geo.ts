@@ -57,6 +57,20 @@ export const CITY_NAMES: Record<City, string> = {
   capetown: "Cape Town",
 };
 
+/** Longitude, latitude of each city (for live weather). */
+export const LONLAT: Record<City, [number, number]> = {
+  conegliano: [12.3, 45.89], treviso: [12.24, 45.67], venezia: [12.33, 45.44], padova: [11.88, 45.41], verona: [10.99, 45.44],
+  trieste: [13.78, 45.65], milano: [9.19, 45.46], torino: [7.69, 45.07], genova: [8.93, 44.41], bologna: [11.34, 44.49],
+  firenze: [11.26, 43.77], roma: [12.5, 41.9], napoli: [14.27, 40.85], bari: [16.87, 41.12], palermo: [13.36, 38.12],
+  cagliari: [9.11, 39.22], munchen: [11.58, 48.14], wien: [16.37, 48.21], zurich: [8.54, 47.37], ljubljana: [14.51, 46.06],
+  innsbruck: [11.4, 47.27], nice: [7.26, 43.7], london: [-0.13, 51.51], paris: [2.35, 48.86], berlin: [13.4, 52.52],
+  amsterdam: [4.9, 52.37], brussels: [4.35, 50.85], stockholm: [18.07, 59.33], copenhagen: [12.57, 55.68], oslo: [10.75, 59.91],
+  warszawa: [21.01, 52.23], praha: [14.42, 50.08], bratislava: [17.11, 48.15], newyork: [-74.0, 40.71], miami: [-80.19, 25.76],
+  losangeles: [-118.24, 34.05], chicago: [-87.63, 41.88], toronto: [-79.38, 43.65], saopaulo: [-46.63, -23.55],
+  mexico: [-99.13, 19.43], tokyo: [139.69, 35.69], shanghai: [121.47, 31.23], hongkong: [114.17, 22.32],
+  singapore: [103.82, 1.35], sydney: [151.21, -33.87], melbourne: [144.96, -37.81], dubai: [55.27, 25.2], capetown: [18.42, -33.92],
+};
+
 export const ITALIAN = new Set<City>([
   "conegliano", "treviso", "venezia", "padova", "verona", "trieste", "milano", "torino",
   "genova", "bologna", "firenze", "roma", "napoli", "bari", "palermo", "cagliari",

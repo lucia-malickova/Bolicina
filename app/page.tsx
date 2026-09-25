@@ -1,13 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { Play, Square } from "lucide-react";
+import { Play, Square, Store, UtensilsCrossed, Users, Network } from "lucide-react";
 import Bubbles from "@/components/serena/Bubbles";
 import LangToggle from "@/components/serena/LangToggle";
 import PhoneFrame from "@/components/serena/PhoneFrame";
 import QrPopover from "@/components/serena/QrPopover";
 import Dashboard from "@/components/serena/dashboard/Dashboard";
 import SommelierApp from "@/components/serena/phone/SommelierApp";
+import NetworkView from "@/components/serena/eco/NetworkView";
+import ShopView from "@/components/serena/eco/ShopView";
+import VenueView from "@/components/serena/eco/VenueView";
+import type { L10n } from "@/lib/i18n";
 import { t } from "@/lib/i18n";
 import type { Lang } from "@/lib/i18n";
 import { CITY_NAMES } from "@/lib/geo";
@@ -16,7 +20,17 @@ import { useTastings } from "@/lib/useTastings";
 import { useVotes } from "@/lib/useVotes";
 import { WINES } from "@/lib/wines";
 
+type View = "guest" | "venue" | "shop" | "network";
+
+const VIEWS: { id: View; label: L10n; Icon: typeof Users }[] = [
+  { id: "guest", label: { it: "Ospite e cantina", en: "Guest and winery" }, Icon: Users },
+  { id: "venue", label: { it: "Ristorante", en: "Restaurant" }, Icon: UtensilsCrossed },
+  { id: "shop", label: { it: "Enoteca", en: "Wine shop" }, Icon: Store },
+  { id: "network", label: { it: "Rete Bollicine", en: "Bollicine network" }, Icon: Network },
+];
+
 export default function Stage() {
+  const [view, setView] = useState<View>("guest");
   const [lang, setLang] = useState<Lang>("it");
   const [personaId, setPersonaId] = useState(PERSONAS[0].id);
   const { tastings, add, reset } = useTastings();
@@ -56,6 +70,27 @@ export default function Stage() {
         </div>
       </header>
 
+      <nav aria-label="Views" className="relative z-20 mx-auto max-w-[1520px] px-4 sm:px-8">
+        <div className="no-scrollbar flex gap-2 overflow-x-auto rounded-full hairline p-1.5">
+          {VIEWS.map(({ id, label, Icon }) => (
+            <button
+              key={id}
+              onClick={() => {
+                setAuto(false);
+                setView(id);
+              }}
+              aria-pressed={view === id}
+              data-on={view === id}
+              className="chip flex shrink-0 items-center gap-2 border-transparent px-4 py-2 text-[12px] font-medium"
+            >
+              <Icon strokeWidth={1.5} className="size-4" />
+              {label[lang]}
+            </button>
+          ))}
+        </div>
+      </nav>
+
+      <div hidden={view !== "guest"}>
       <section className="relative z-10 mx-auto max-w-[1520px] px-4 pt-6 sm:px-8">
         <h1 className="font-display text-[44px] leading-[1.02] sm:text-[64px]">
           <span className="champagne-text italic">{t("stageTitle", lang)}</span>
@@ -132,6 +167,15 @@ export default function Stage() {
           }}
         />
       </main>
+      </div>
+
+      {view !== "guest" && (
+        <div className="enter relative z-10 mx-auto max-w-[1520px] px-4 pb-20 pt-8 sm:px-8">
+          {view === "venue" && <VenueView lang={lang} />}
+          {view === "shop" && <ShopView lang={lang} />}
+          {view === "network" && <NetworkView lang={lang} />}
+        </div>
+      )}
     </div>
   );
 }
