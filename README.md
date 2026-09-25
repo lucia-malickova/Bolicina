@@ -1,33 +1,142 @@
-# Bollicina · AI Sommelier (PoC)
+# Bollicine · Serena 1881 (PoC)
 
-Boutique Next.js (App Router) proof of concept for the Bollicina Maison:
-a VIP tasting experience that collects a 6-second "Sensory Signature",
-plus an Executive Intelligence dashboard for the owner.
+**Bollicine** is the guest app; this repo is a meeting demo for Serena Wines 1881: a personal sommelier for every guest on the
+left, and what the winery learns from it, live, on the right. Italian and English.
 
-Stack: Next.js 16, React 19, Tailwind CSS v4, Lucide React, Recharts.
-Fonts: Playfair Display (headings), Montserrat (body) via `next/font`.
+Stack: Next.js 16 (App Router), React 19, Tailwind CSS v4, Lucide, `qrcode`.
+Fonts: Cormorant Garamond (display) and Manrope (UI) via `next/font`.
+
+## Routes
+
+- `/` presenter stage with four views: **Ospite e cantina** (11 guests, phone, winery
+  dashboard), **Ristorante** (a venue's neutral wine list + venue dashboard), **Enoteca**
+  (shelf scan, click & collect, restock by weather), **Rete Bollicine** (24-month growth
+  and business-model simulation with editable prices, Prosecco Index, data rules).
+- `/app` the guest app alone, full screen, for a real phone (the QR button on `/` points here).
+  Installable (PWA) and works offline: see "Offline" below.
+- `/report` one-page board report of the live dashboard; "Salva come PDF" prints it.
+- `/api/votes` in-memory label votes.
+- `/api/tastings` in-memory store that lets tastings from phones reach the stage.
+
+## What the demo shows
+
+1. **Sommelier.** Mood, company and moment as chips plus free text. The answer is one
+   personal sentence and one real Serena bottle, with kcal and sugar per glass.
+2. **Scan.** Tap a bottle to simulate a label scan; the card says whether it fits the
+   guest's usual taste.
+3. **Tasting (gamification).** Four gestures in about 10 seconds: sweetness, bubbles,
+   aroma, would you buy it again. Reward: a taste profile, not points.
+4. **Memory and sharing.** A returning guest is greeted with their last wine and profile,
+   and a scanned bottle they already tasted shows what they felt last time. The profile
+   can be shared as an Instagram-sized image.
+5. **Voice.** A microphone button dictates the question instead of typing it.
+   **Taste map:** a compass (dry ↔ sweet, mineral ↔ fruity) where every tasting moves
+   the guest's point and leaves a trail. **Gift a glass:** the guest sends a wine with a
+   message; the link (`/app?dono=…&da=…`) opens with a welcome banner for that wine.
+   18+ and "drink responsibly" notices are shown in the app.
+   **Say it:** during the tasting the guest describes the wine in a sentence (voice or
+   text) and the four answers are filled in (`lib/speechTasting.ts`, runs on the phone).
+   **Living label:** after a scan, a short animated story per wine (Audace dives to −20 m).
+   **Your year in bubbles:** Wrapped-style stories ending on a shareable profile.
+   **Price question:** one tap on the reward screen ("how much would you pay?").
+   **Label vote:** two designs for a new bottle; the guest picks one.
+   A venue's own QR code opens `/app?locale=<venue>` so tastings carry the venue.
+   **Home cellar (La mia cantina):** the guest keeps the bottles they own; tonight's pick
+   ranks them by live weather (Open-Meteo, from the phone's position rounded to ~10 km,
+   cached for offline, manual override), mood, usual taste and time in the cellar, with a
+   chilling tip. Opening a bottle starts a tasting marked `home`. Stored on the phone.
+6. **Autoplay.** "Demo automatica" runs all 11 guests while the presenter talks; tapping
+   any guest stops it and hands control back.
+7. **Winery intelligence.** Tastings recorded, repurchase intent, Serena 0.0 among
+   under-25s, perceived vs real sweetness per wine, age groups, 12-month outlook, and:
+   - *Cosa fare domani*: three decisions in plain words, recomputed with every tasting;
+   - *Assaggio virtuale*: design a wine that doesn't exist (sugar, alcohol, aroma, bubbles)
+     and see estimated appeal per age group and the closest wine already in the range;
+   - *Chiedi ai tuoi dati*: prepared questions answered in one sentence;
+   - *Domani*: weather and weekday/weekend change the expected tastings per wine;
+   - *Il valore dei vostri dati*: the first-party data asset the winery is building;
+   - *Avvisi*: owner notifications from month-over-month changes (ranked by significance);
+   - *Il vino che vi manca*: searches wine specs for the biggest gap in the range, and
+     loads it into the virtual tasting;
+   - *Radar qualità nei locali*: per venue, last 10 tastings vs the technical sheet (flat
+     bubbles, tastes sweeter = served warm); a flagged venue also raises an alert;
+   - *Qualità per lotto*: perceived freshness per bottling lot;
+   - *Prezzo e ricavo*: share who'd buy and revenue per 100 guests at the price you set,
+     +3 € scenario and revenue-maximising price;
+   - *Test etichetta*: label A vs B by age group, live votes included;
+   - *Dove si assaggia Serena nel mondo*: live world map over Prosecco's main markets
+     (Italy shown as one bubble with its top cities on hover); new tastings pulse.
+
+## Honest scope
+
+- The 9 wines, their figures and bottle photos come from Serena's technical sheets (2025).
+- kcal per 125 ml glass are estimates from alcohol and residual sugar, not Serena data.
+- Sommelier answers are **simulated**: written replies for the 11 guests and keyword
+  routing for free text (`lib/sommelier.ts`). In production this is the model trained
+  on Serena's own data.
+- Dashboard numbers are an illustrative baseline (`lib/insights.ts`, fixed seed) plus
+  every tasting made in the session. The forecast is a linear trend, labelled as such.
+- Virtual tasting, tomorrow's forecast and data answers are simple, explainable estimates
+  over the same data (`lib/simulate.ts`); weather coefficients are examples. The baseline
+  seeds one story on purpose (Medea losing 25–34 year-olds in the last quarter) so the
+  alerts have something real to find, one Medea lot (L26-052) planted as flatter, and
+  one fictional venue (Hotel Aurora, London) serving it flat. Venues are fictional;
+  willingness-to-pay answers and earlier label votes are illustrative; the price in the
+  simulator is set by the user, not Serena's list price. Baseline cities are illustrative.
+- Voice uses the browser's own speech recogniser (Chrome, Safari). Chrome sends the audio
+  to Google to transcribe, so it is neither offline nor on-premise; production would use
+  a speech model on the winery's server or on the phone.
+- The restaurant and shop views use fictional venues and anonymous "Produttore B–F"
+  wines; prices, counts and the network scenario (adoption curves, subscription prices,
+  founders' discount) are illustrative and editable, not forecasts.
+- Weather: on a real phone the forecast comes from Open-Meteo (no API key). Coordinates
+  leave the phone rounded; production would proxy this through the winery's server.
+- Tastings live in server memory. Phones share them only when one server process serves
+  them all (`npm run build && npm start` on a laptop, phones on the same Wi-Fi). On
+  Vercel, instances may not share memory, so the phone → stage link can miss.
+
+## Offline
+
+`/app` registers a service worker (`public/sw.js`, production builds only) that keeps the
+app, its code, fonts and bottle images on the phone. Without signal the sommelier,
+scanning and tasting all still work; tastings wait in a queue on the phone
+(`localStorage`) and are sent automatically when the connection returns. The phone also
+remembers its own last 50 tastings for the "welcome back" greeting.
 
 ## Run locally
 
 ```bash
-cd bolicina
 npm install
 npm run dev      # http://localhost:3000
 ```
 
+For the meeting, on the laptop: `npm run build && npm start`, then open `/` and use the
+QR button so guests can join from their own phones on the same network.
+
+## Deploy to Vercel
+
+vercel.com → **Add New… → Project** → import `lucia-malickova/bolicina` → **Deploy**.
+No environment variables.
+
 ## Structure
 
-- `app/layout.tsx`: fonts and global shell
-- `app/page.tsx`: navigation toggle between the two views
-- `components/VipExperience.tsx`: cuvée selector, Sensory Signature, AI Concierge chat
-- `components/ExecutiveDashboard.tsx`: metric cards and compliance badge
-- `components/SensoryChart.tsx`: Recharts "Market Sensory Mapping" bar chart
-- `components/data.ts`: wines, sensory questions, mock chart data and the mock concierge
+- `lib/wines.ts` catalogue from the technical sheets, kcal, sugar, sweetness index
+- `lib/personas.ts` the 11 guests and their simulated sommelier replies (IT/EN)
+- `lib/sommelier.ts` free-text routing and "fits your taste" logic
+- `lib/actions.ts` the three decisions and the data-value figures
+- `lib/simulate.ts` virtual tasting, data questions, tomorrow's forecast
+- `lib/useTastings.ts` live sync, offline queue, on-phone memory
+- `lib/cellar.ts` + `lib/useWeather.ts` home cellar and live weather; `lib/ecosystem.ts`
+  venue list, shelf, neutral ranking and the network scenario
+- `lib/useDictation.ts` voice input; `lib/shareCard.ts` shareable profile image
+- `lib/venues.ts` venue radar; `lib/market.ts` lots, willingness to pay, label votes
+- `lib/alerts.ts` owner notifications; `lib/geo.ts` + `lib/worldShapes.ts` the live map
+  (outlines generated from Natural Earth via world-atlas, public domain)
+- `lib/tasting.ts` tasting type, payload validation, taste profiles
+- `lib/insights.ts` illustrative baseline and dashboard aggregations
+- `lib/i18n.ts` all interface text in Italian and English
+- `components/serena/phone/*` the guest app; `components/serena/dashboard/*` the winery view
+- `public/wines/*` bottle cut-outs extracted from the technical sheets
 
-The concierge answers from keyword rules in `conciergeReply()`. Swap it for a call
-to a locally hosted model to make it real. Dashboard figures are static PoC values.
-
-## Design
-
-`design/` holds the source of the two screens from the Claude design canvas
-(VIP Client Experience and Executive Intelligence), kept as a backup.
+The previous Bollicina PoC files (`components/*.tsx`, `components/data.ts`, `design/`)
+are no longer used by any route.
